@@ -1,15 +1,16 @@
 package GroceryStore;
 
 public class Product {
+	private static int idCounter = 1;
 	private String name;
 	private int productID;
 	private int currentStock;
 	private double price;
 	private int reorderLevel;
 
-	public Product(String name, int productID, int currentStock, double price, int reorderLevel) {
+	public Product(String name, int currentStock, double price, int reorderLevel) {
 		this.name = name;
-		this.productID = productID;
+		this.productID = idCounter++;
 		this.currentStock = currentStock;
 		this.price = price;
 		this.reorderLevel = reorderLevel;
