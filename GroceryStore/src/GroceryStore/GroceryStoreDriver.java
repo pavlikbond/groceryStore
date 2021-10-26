@@ -17,7 +17,7 @@ public class GroceryStoreDriver {
 		store.addProduct("a", 20, 10.5, 5);
 		store.addProduct("b", 20, 10.02, 5);
 		store.addProduct("c", 20, 10.11, 5);
-		store.addProduct("d", 20, 10, 5);
+		store.addProduct("d", 20, 10.9, 5);
 		store.addProduct("e", 20, 10, 5);
 
 		store.checkOutItems(0, date);
