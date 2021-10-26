@@ -31,7 +31,7 @@ public class Transaction {
 		return transactionID;
 	}
 
-	public int getMemeberID() {
+	public int getMemberID() {
 		return memeberID;
 	}
 
@@ -45,6 +45,10 @@ public class Transaction {
 
 	public Date getDate() {
 		return date;
+	}
+
+	public void setTotal(double total) {
+		this.total = total;
 	}
 
 	@Override
