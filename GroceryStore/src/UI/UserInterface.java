@@ -65,44 +65,41 @@ public class UserInterface {
 		help();
 		while ((command = getCommand()) != EXIT) {
 			switch (command) {
-			case ADD_MEMBER:
-				addMember();
+			case ENROLL_MEMBER:
+				enrollMember();
 				break;
-			case ADD_BOOKS:
-				addBooks();
+			case REMOVE_MEMBER:
+				removeMember();
 				break;
-			case ISSUE_BOOKS:
-				issueBooks();
+			case ADD_PRODUCT:
+				addProduct();
 				break;
-			case RETURN_BOOKS:
-				returnBooks();
+			case CHECK_OUT:
+				checkOutItems();
 				break;
-			case REMOVE_BOOKS:
-				removeBooks();
+			case PROCESS_SHIPMENT:
+				processShipment();
 				break;
-			case RENEW_BOOKS:
-				renewBooks();
+			case CHANGE_PRICE:
+				changePrice();
 				break;
-			case PLACE_HOLD:
-				placeHold();
+			case GET_PRODUCT_INFO:
+				getProductInfo();
 				break;
-			case REMOVE_HOLD:
-				removeHold();
+			case GET_MEMBER_INFO:
+				getMemberInfo();
 				break;
-			case PROCESS_HOLD:
-				processHolds();
+			case PRINT_TRANSACTIONS:
+				printTransactions();
 				break;
-			case GET_TRANSACTIONS:
-				getTransactions();
+			case LIST_OUTSTANDING_ORDERS:
+				printOrders();
 				break;
-			case GET_MEMBERS:
-				getMembers();
+			case LIST_MEMBERS:
+				listMembers();
 				break;
-			case GET_BOOKS:
-				getBooks();
-				break;
-			case GET_BOOK_TITLE:
-				getBookTitle();
+			case LIST_PRODUCTS:
+				listProducts();
 				break;
 			case SAVE:
 				save();
