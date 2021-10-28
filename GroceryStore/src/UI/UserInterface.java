@@ -1,10 +1,15 @@
 package UI;
 
 import java.io.BufferedReader;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectOutputStream;
 import java.util.Date;
+import java.util.Scanner;
 
 import GroceryStore.GroceryStore;
+import GroceryStore.Member;
 import GroceryStore.Product;
 import UI.UserInterface;
 
@@ -58,13 +63,40 @@ public class UserInterface {
 		System.out.println(HELP + " for help");
 	}
 	
+    //Here is step 13, it doesn't require we load so here is only save
+    //This should save data to the disk
+    public static boolean save() {
+        try {
+            FileOutputStream file = new FileOutputStream("LibraryData");
+            ObjectOutputStream output = new ObjectOutputStream(file);
+            output.writeObject(GroceryStore);
+            Member.save(output);
+            file.close();
+            return true;
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+            return false;
+        }
+    }
+	
+    //We can use this as the switch case for the switch statement
+    public static int getNumberFromUser() {
+    	Scanner myObj = new Scanner(System.in);
+        String userInput = myObj.nextLine();
+        int toInt = Integer.parseInt(userInput); //This changes the String to an int
+        return toInt;
+    }
+	
 	//to implement
 	/*
 	public void process() {
-		int command;
+		int userInput = getNumberFromUser();
 		help();
-		while ((command = getCommand()) != EXIT) {
+		while (getNumberFromUser) {
 			switch (command) {
+			case EXIT:
+				exit();
+				break;
 			case ENROLL_MEMBER:
 				enrollMember();
 				break;
@@ -113,9 +145,7 @@ public class UserInterface {
 
 	public static void main(String[] args) {
 
-		
-		
-		
+				
 		GroceryStore store = GroceryStore.getInstance();
 
 		Date date = new Date();

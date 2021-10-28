@@ -1,5 +1,7 @@
 package GroceryStore;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.Date;
 
 public class Member {
@@ -42,5 +44,10 @@ public class Member {
 
 	public int getMemberID() {
 		return memberID;
+	}
+	
+	//So we can save to the disk
+	public static void save(ObjectOutputStream output) throws IOException {
+        output.writeObject(idCounter);
 	}
 }
