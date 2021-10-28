@@ -33,6 +33,7 @@ public class UserInterface {
 	private static final int HELP = 14;
 
 	private UserInterface() {
+		groceryStore = GroceryStore.getInstance();
 	}
 
 	public static UserInterface instance() {
@@ -118,7 +119,7 @@ public class UserInterface {
 	}
 
 	//to implement
-	
+
 	public void process() {
 		int userInput;
 		help();
@@ -127,41 +128,41 @@ public class UserInterface {
 			case ENROLL_MEMBER:
 				enrollMember();
 				break;
-				/*
+			/*
 			case REMOVE_MEMBER:
-				removeMember();
-				break;
+			removeMember();
+			break;
 			case ADD_PRODUCT:
-				addProduct();
-				break;
+			addProduct();
+			break;
 			case CHECK_OUT:
-				checkOutItems();
-				break;
+			checkOutItems();
+			break;
 			case PROCESS_SHIPMENT:
-				processShipment();
-				break;
+			processShipment();
+			break;
 			case CHANGE_PRICE:
-				changePrice();
-				break;
+			changePrice();
+			break;
 			case GET_PRODUCT_INFO:
-				getProductInfo();
-				break;
+			getProductInfo();
+			break;
 			case GET_MEMBER_INFO:
-				getMemberInfo();
-				break;
+			getMemberInfo();
+			break;
 			case PRINT_TRANSACTIONS:
-				printTransactions();
-				break;
+			printTransactions();
+			break;
 			case LIST_OUTSTANDING_ORDERS:
-				printOrders();
-				break;
+			printOrders();
+			break;
 			case LIST_MEMBERS:
-				listMembers();
-				break;
+			listMembers();
+			break;
 			case LIST_PRODUCTS:
-				listProducts();
-				break;
-				*/
+			listProducts();
+			break;
+			*/
 			case SAVE:
 				save();
 				break;
@@ -170,12 +171,12 @@ public class UserInterface {
 				break;
 			}
 		}
-	} 
+	}
 
 	public static void main(String[] args) {
 
 		GroceryStore store = GroceryStore.getInstance();
-
+		UserInterface.instance().process();
 		LocalDate date = LocalDate.now();
 
 		store.enrollMember("Pavel Bondarenko", "123 Main St. Chaska, MN 55318", "952 123-4567", date, 100.00);
