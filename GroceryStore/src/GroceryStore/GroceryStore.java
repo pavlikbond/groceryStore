@@ -8,6 +8,7 @@ public class GroceryStore {
 	private ArrayList<Member> memberList;
 	private ArrayList<Product> productList;
 	private ArrayList<Transaction> transactionList;
+	private ArrayList<Shipment> shipmentList;
 
 	// singleton design pattern
 	private static GroceryStore instance = null;
@@ -16,6 +17,7 @@ public class GroceryStore {
 		this.memberList = new ArrayList<Member>();
 		this.productList = new ArrayList<Product>();
 		this.transactionList = new ArrayList<Transaction>();
+		this.shipmentList = new ArrayList<Shipment>();
 	};
 
 	public static GroceryStore getInstance() {
@@ -31,6 +33,10 @@ public class GroceryStore {
 
 	public Product getProduct(int productId) {
 		return productList.get(productId);
+	}
+
+	public Shipment getShipment(int orderId) {
+		return shipmentList.get(orderId);
 	}
 
 	// create date object, create member object, add member to list
@@ -63,7 +69,6 @@ public class GroceryStore {
 	// Checks out a member once they're done shopping. Creates a transaction with
 	// total price and product list and requests a shipment if product stock is
 	// below reorder level.
-	// TO DO: implement shipment request
 	// TO DO: add quantities to transactions somehow
 	public void checkOutItems(int memId, LocalDate date) {
 		Scanner reader = new Scanner(System.in);
@@ -93,7 +98,8 @@ public class GroceryStore {
 
 					// make reorder if necessary
 					if (product.getCurrentStock() <= product.getReorderLevel()) {
-						// TO DO make new shipment
+						shipmentList.add(new Shipment(product));
+						System.out.println("New order has been placed for: " + product.getName());
 					}
 
 					break;
