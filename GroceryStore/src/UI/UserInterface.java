@@ -10,11 +10,11 @@ import java.util.Scanner;
 
 import GroceryStore.GroceryStore;
 import GroceryStore.Member;
-import GroceryStore.Product;
 
 public class UserInterface {
 	private static UserInterface userInterface;
 	private BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+	private Scanner scanner = new Scanner(System.in);
 	private static GroceryStore groceryStore;
 	private static final int EXIT = 0;
 	private static final int ENROLL_MEMBER = 1;
@@ -94,9 +94,10 @@ public class UserInterface {
 
 	//We can use this as the switch case for the switch statement
 	//Pavel: this will create a new Scanner object each time the user enters a number which I heard is not good, but I'm not sure
-	public static int getNumberFromUser() {
-		Scanner myObj = new Scanner(System.in);
-		String userInput = myObj.nextLine();
+	//I'll put it up top that way it can be used in multiple methods
+	public int getNumberFromUser(String prompt) {
+		System.out.println(prompt);
+		String userInput = scanner.nextLine();
 		int toInt = Integer.parseInt(userInput); //This changes the String to an int
 		return toInt;
 	}
@@ -118,50 +119,56 @@ public class UserInterface {
 		}
 	}
 
+	public void removeMember() {
+		int id = getNumberFromUser("Enter member ID: ");
+		String result = groceryStore.removeMember(id);
+		System.out.println(result);
+	}
+
 	//to implement
 
 	public void process() {
 		int userInput;
 		help();
-		while ((userInput = getNumberFromUser()) != 0) {
+		while ((userInput = getNumberFromUser("Enter command ")) != 0) {
 			switch (userInput) {
 			case ENROLL_MEMBER:
 				enrollMember();
 				break;
-			/*
 			case REMOVE_MEMBER:
-			removeMember();
-			break;
+				removeMember();
+				break;
+			/*
 			case ADD_PRODUCT:
-			addProduct();
-			break;
+				addProduct();
+				break;
 			case CHECK_OUT:
-			checkOutItems();
-			break;
+				checkOutItems();
+				break;
 			case PROCESS_SHIPMENT:
-			processShipment();
-			break;
+				processShipment();
+				break;
 			case CHANGE_PRICE:
-			changePrice();
-			break;
+				changePrice();
+				break;
 			case GET_PRODUCT_INFO:
-			getProductInfo();
-			break;
+				getProductInfo();
+				break;
 			case GET_MEMBER_INFO:
-			getMemberInfo();
-			break;
+				getMemberInfo();
+				break;
 			case PRINT_TRANSACTIONS:
-			printTransactions();
-			break;
+				printTransactions();
+				break;
 			case LIST_OUTSTANDING_ORDERS:
-			printOrders();
-			break;
+				printOrders();
+				break;
 			case LIST_MEMBERS:
-			listMembers();
-			break;
+				listMembers();
+				break;
 			case LIST_PRODUCTS:
-			listProducts();
-			break;
+				listProducts();
+				break;
 			*/
 			case SAVE:
 				save();
@@ -177,33 +184,33 @@ public class UserInterface {
 
 		GroceryStore store = GroceryStore.getInstance();
 		UserInterface.instance().process();
-		LocalDate date = LocalDate.now();
-
-		store.enrollMember("Pavel Bondarenko", "123 Main St. Chaska, MN 55318", "952 123-4567", date, 100.00);
-		System.out.println(store.removeMember(0));
-		System.out.println(store.removeMember(1));
-
-		// Testing addProduct, checkout
-		store.addProduct("a", 20, 10.5, 5);
-		store.addProduct("b", 20, 10.02, 5);
-		store.addProduct("c", 20, 10.11, 5);
-		store.addProduct("d", 20, 10.9, 5);
-		store.addProduct("e", 20, 10, 5);
-
-		store.checkOutItems(0, date);
-		System.out.println("Member: " + store.getTransaction(0).getMemberID());
-
-		for (Product product : store.getTransaction(0).getProductList()) {
-			System.out.println(product.getName());
-		}
-
-		System.out.println("Product a stock: " + store.getProduct(0).getCurrentStock());
-		System.out.println("Product b stock: " + store.getProduct(1).getCurrentStock());
-		System.out.println("Product c stock: " + store.getProduct(2).getCurrentStock());
-		System.out.println("Product d stock: " + store.getProduct(3).getCurrentStock());
-		System.out.println("Product e stock: " + store.getProduct(4).getCurrentStock());
-
-		System.out.println("Transaction Total: " + store.getTransaction(0).getTotal());
+		//		LocalDate date = LocalDate.now();
+		//
+		//		store.enrollMember("Pavel Bondarenko", "123 Main St. Chaska, MN 55318", "952 123-4567", date, 100.00);
+		//		System.out.println(store.removeMember(0));
+		//		System.out.println(store.removeMember(1));
+		//
+		//		// Testing addProduct, checkout
+		//		store.addProduct("a", 20, 10.5, 5);
+		//		store.addProduct("b", 20, 10.02, 5);
+		//		store.addProduct("c", 20, 10.11, 5);
+		//		store.addProduct("d", 20, 10.9, 5);
+		//		store.addProduct("e", 20, 10, 5);
+		//
+		//		store.checkOutItems(0, date);
+		//		System.out.println("Member: " + store.getTransaction(0).getMemberID());
+		//
+		//		for (Product product : store.getTransaction(0).getProductList()) {
+		//			System.out.println(product.getName());
+		//		}
+		//
+		//		System.out.println("Product a stock: " + store.getProduct(0).getCurrentStock());
+		//		System.out.println("Product b stock: " + store.getProduct(1).getCurrentStock());
+		//		System.out.println("Product c stock: " + store.getProduct(2).getCurrentStock());
+		//		System.out.println("Product d stock: " + store.getProduct(3).getCurrentStock());
+		//		System.out.println("Product e stock: " + store.getProduct(4).getCurrentStock());
+		//
+		//		System.out.println("Transaction Total: " + store.getTransaction(0).getTotal());
 
 	}
 
