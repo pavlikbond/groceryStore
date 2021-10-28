@@ -1,7 +1,7 @@
 package GroceryStore;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Scanner;
 
 public class GroceryStore {
@@ -34,10 +34,10 @@ public class GroceryStore {
 	}
 
 	// create date object, create member object, add member to list
-	public void enrollMember(String name, String address, String phoneNumber, Date dateJoined, double feePaid) {
-		Date date = new Date();
+	public boolean enrollMember(String name, String address, String phoneNumber, LocalDate dateJoined, double feePaid) {
+		LocalDate date = LocalDate.now();
 		Member newMember = new Member(name, address, phoneNumber, date, feePaid);
-		memberList.add(newMember);
+		return memberList.add(newMember);
 	}
 
 	// remove member from list using member ID
@@ -65,7 +65,7 @@ public class GroceryStore {
 	// below reorder level.
 	// TO DO: implement shipment request
 	// TO DO: add quantities to transactions somehow
-	public void checkOutItems(int memId, Date date) {
+	public void checkOutItems(int memId, LocalDate date) {
 		Scanner reader = new Scanner(System.in);
 
 		Transaction transaction = new Transaction(memId, 0, date);

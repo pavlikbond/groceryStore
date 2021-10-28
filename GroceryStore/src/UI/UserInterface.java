@@ -5,18 +5,17 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.Scanner;
 
 import GroceryStore.GroceryStore;
 import GroceryStore.Member;
 import GroceryStore.Product;
-import UI.UserInterface;
 
 public class UserInterface {
 	private static UserInterface userInterface;
 	private BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-	private static GroceryStore GroceryStore;
+	private static GroceryStore groceryStore;
 	private static final int EXIT = 0;
 	private static final int ENROLL_MEMBER = 1;
 	private static final int REMOVE_MEMBER = 2;
@@ -32,10 +31,10 @@ public class UserInterface {
 	private static final int LIST_PRODUCTS = 12;
 	private static final int SAVE = 13;
 	private static final int HELP = 14;
-	
+
 	private UserInterface() {
 	}
-	
+
 	public static UserInterface instance() {
 		if (userInterface == null) {
 			return userInterface = new UserInterface();
@@ -43,7 +42,20 @@ public class UserInterface {
 			return userInterface;
 		}
 	}
-	
+
+	public String getInput(String prompt) {
+		do {
+			try {
+				System.out.println(prompt);
+				String line = reader.readLine();
+				return line;
+			} catch (IOException ioe) {
+				System.exit(0);
+			}
+		} while (true);
+
+	}
+
 	public void help() {
 		System.out.println("Enter a number between 0 and 12 as explained below:");
 		System.out.println(EXIT + " to Exit\n");
@@ -62,44 +74,60 @@ public class UserInterface {
 		System.out.println(SAVE + " to  save data");
 		System.out.println(HELP + " for help");
 	}
-	
-    //Here is step 13, it doesn't require we load so here is only save
-    //This should save data to the disk
-    public static boolean save() {
-        try {
-            FileOutputStream file = new FileOutputStream("LibraryData");
-            ObjectOutputStream output = new ObjectOutputStream(file);
-            output.writeObject(GroceryStore);
-            Member.save(output);
-            file.close();
-            return true;
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-            return false;
-        }
-    }
-	
-    //We can use this as the switch case for the switch statement
-    public static int getNumberFromUser() {
-    	Scanner myObj = new Scanner(System.in);
-        String userInput = myObj.nextLine();
-        int toInt = Integer.parseInt(userInput); //This changes the String to an int
-        return toInt;
-    }
-	
+
+	//Here is step 13, it doesn't require we load so here is only save
+	//This should save data to the disk
+	public static boolean save() {
+		try {
+			FileOutputStream file = new FileOutputStream("LibraryData");
+			ObjectOutputStream output = new ObjectOutputStream(file);
+			output.writeObject(groceryStore);
+			Member.save(output);
+			file.close();
+			return true;
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+			return false;
+		}
+	}
+
+	//We can use this as the switch case for the switch statement
+	//Pavel: this will create a new Scanner object each time the user enters a number which I heard is not good, but I'm not sure
+	public static int getNumberFromUser() {
+		Scanner myObj = new Scanner(System.in);
+		String userInput = myObj.nextLine();
+		int toInt = Integer.parseInt(userInput); //This changes the String to an int
+		return toInt;
+	}
+
+	public void enrollMember() {
+		String name = getInput("Enter your name");
+		String address = getInput("Enter address");
+		String phoneNumber = getInput("Enter phone number");
+
+		LocalDate date = LocalDate.now();
+		//Pavel: is fee supposed to be a boolean? like, if they paid it or not? to me that makes the most sense
+		double fee = 100.00;
+
+		boolean result = groceryStore.enrollMember(name, address, phoneNumber, date, fee);
+		if (!result) {
+			System.out.println("Could not add member");
+		} else {
+			System.out.println("Member added");
+		}
+	}
+
 	//to implement
-	/*
+	
 	public void process() {
-		int userInput = getNumberFromUser();
+		int userInput;
 		help();
-		while (getNumberFromUser) {
-			switch (command) {
-			case EXIT:
-				exit();
-				break;
+		while ((userInput = getNumberFromUser()) != 0) {
+			switch (userInput) {
 			case ENROLL_MEMBER:
 				enrollMember();
 				break;
+				/*
 			case REMOVE_MEMBER:
 				removeMember();
 				break;
@@ -133,6 +161,7 @@ public class UserInterface {
 			case LIST_PRODUCTS:
 				listProducts();
 				break;
+				*/
 			case SAVE:
 				save();
 				break;
@@ -141,14 +170,13 @@ public class UserInterface {
 				break;
 			}
 		}
-	} */
+	} 
 
 	public static void main(String[] args) {
 
-				
 		GroceryStore store = GroceryStore.getInstance();
 
-		Date date = new Date();
+		LocalDate date = LocalDate.now();
 
 		store.enrollMember("Pavel Bondarenko", "123 Main St. Chaska, MN 55318", "952 123-4567", date, 100.00);
 		System.out.println(store.removeMember(0));

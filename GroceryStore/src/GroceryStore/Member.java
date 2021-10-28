@@ -2,7 +2,7 @@ package GroceryStore;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
-import java.util.Date;
+import java.time.LocalDate;
 
 public class Member {
 	private static int idCounter = 1;
@@ -10,10 +10,10 @@ public class Member {
 	private String name;
 	private String address;
 	private String phoneNumber;
-	private Date dateJoined;
+	private LocalDate dateJoined;
 	private double feePaid;
 
-	public Member(String name, String address, String phoneNumber, Date dateJoined, double feePaid) {
+	public Member(String name, String address, String phoneNumber, LocalDate dateJoined, double feePaid) {
 		this.name = name;
 		this.address = address;
 		this.phoneNumber = phoneNumber;
@@ -34,7 +34,7 @@ public class Member {
 		return phoneNumber;
 	}
 
-	public Date getDateJoined() {
+	public LocalDate getDateJoined() {
 		return dateJoined;
 	}
 
@@ -45,9 +45,9 @@ public class Member {
 	public int getMemberID() {
 		return memberID;
 	}
-	
+
 	//So we can save to the disk
 	public static void save(ObjectOutputStream output) throws IOException {
-        output.writeObject(idCounter);
+		output.writeObject(idCounter);
 	}
 }

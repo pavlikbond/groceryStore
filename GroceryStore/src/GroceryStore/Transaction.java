@@ -1,7 +1,7 @@
 package GroceryStore;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 
 public class Transaction {
 	private static int idCounter = 1;
@@ -9,9 +9,9 @@ public class Transaction {
 	private int memeberID;
 	private ArrayList<Product> productList;
 	private double total;
-	private Date date;
+	private LocalDate date;
 
-	public Transaction(int memeberID, double total, Date date) {
+	public Transaction(int memeberID, double total, LocalDate date) {
 		this.transactionID = idCounter++;
 		this.memeberID = memeberID;
 		this.total = total;
@@ -43,7 +43,7 @@ public class Transaction {
 		return total;
 	}
 
-	public Date getDate() {
+	public LocalDate getDate() {
 		return date;
 	}
 
