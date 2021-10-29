@@ -60,10 +60,10 @@ public class GroceryStore {
 
 	// Add a product to the product list with product name, stock, price and reorder
 	// value
-	public void addProduct(String product_name, int stock, double price, int reorder) {
+	public boolean addProduct(String product_name, int stock, double price, int reorder) {
 		Product product = new Product(product_name, stock, price, reorder);
 
-		productList.add(product);
+		return productList.add(product);
 	}
 
 	// Checks out a member once they're done shopping. Creates a transaction with
@@ -117,5 +117,41 @@ public class GroceryStore {
 		transactionList.add(transaction);
 		reader.close();
 
+	}
+
+	//uses id to look through list, if id matches, then the price is changed
+	public boolean changePrice(int productID, double newPrice) {
+		for (Product product : productList) {
+			if (product.getProductID() == productID) {
+				product.setPrice(newPrice);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	//searches through list of products for name and returns list of products that match criteria
+	public ArrayList<Product> getProductInfo(String search) {
+		ArrayList<Product> results = new ArrayList<>();
+		search = search.toLowerCase();
+		for (Product product : productList) {
+			//instead of contains maybe something else could be used?
+			if (product.getName().toLowerCase().contains(search)) {
+				results.add(product);
+			}
+		}
+		return results;
+	}
+
+	//searches memberList and if the name contains search substring then returns list of members who fit criteria
+	public ArrayList<Member> getMemberInfo(String search) {
+		ArrayList<Member> results = new ArrayList<>();
+		search = search.toLowerCase();
+		for (Member member : memberList) {
+			if (member.getName().toLowerCase().contains(search)) {
+				results.add(member);
+			}
+		}
+		return results;
 	}
 }

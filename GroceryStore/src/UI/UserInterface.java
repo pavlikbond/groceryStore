@@ -6,10 +6,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 import GroceryStore.GroceryStore;
 import GroceryStore.Member;
+import GroceryStore.Product;
 
 public class UserInterface {
 	private static UserInterface userInterface;
@@ -42,19 +44,6 @@ public class UserInterface {
 		} else {
 			return userInterface;
 		}
-	}
-
-	public String getInput(String prompt) {
-		do {
-			try {
-				System.out.println(prompt);
-				String line = reader.readLine();
-				return line;
-			} catch (IOException ioe) {
-				System.exit(0);
-			}
-		} while (true);
-
 	}
 
 	public void help() {
@@ -103,6 +92,26 @@ public class UserInterface {
 		return toInt;
 	}
 
+	public double getPriceFromUser(String prompt) {
+		System.out.println(prompt);
+		String userInput = scanner.nextLine();
+		double toDouble = Double.parseDouble(userInput); // This changes the String to an int
+		return toDouble;
+	}
+
+	public String getInput(String prompt) {
+		do {
+			try {
+				System.out.println(prompt);
+				String line = reader.readLine();
+				return line;
+			} catch (IOException ioe) {
+				System.exit(0);
+			}
+		} while (true);
+
+	}
+
 	public void enrollMember() {
 		String name = getInput("Enter your name");
 		String address = getInput("Enter address");
@@ -127,6 +136,69 @@ public class UserInterface {
 		System.out.println(result);
 	}
 
+	public void addProduct() {
+		String productName = getInput("Enter product name :");
+		int stock = getNumberFromUser("Enter current stock :");
+		double price = getPriceFromUser("Enter current price: ");
+		int reorderPoint = getNumberFromUser("Enter reorder point");
+		boolean result = groceryStore.addProduct(productName, stock, price, reorderPoint);
+		if (result) {
+			System.out.println("Product added");
+		} else {
+			System.out.println("Product could not be added");
+		}
+	}
+
+	public void checkOutItems() {
+		LocalDate date = LocalDate.now();
+		int memberID = getNumberFromUser("Enter member ID");
+		groceryStore.checkOutItems(memberID, date);
+	}
+
+	public void changePrice() {
+		int productID = getNumberFromUser("Enter product ID: ");
+		double newPrice = getPriceFromUser("Enter new price: ");
+		boolean result = groceryStore.changePrice(productID, newPrice);
+		if (result) {
+			System.out.println("New price has been set");
+		} else {
+			System.out.println("Product not found");
+		}
+	}
+
+	public void getMemberInfo() {
+		String search = getInput("Enter the name you're looking for: ");
+		ArrayList<Member> results = groceryStore.getMemberInfo(search);
+		if (results.size() == 0) {
+			System.out.println("No members found with given criteria");
+		} else {
+			for (Member member : results) {
+				System.out.println("Member name: " + member.getName());
+				System.out.println("Address: " + member.getAddress());
+				System.out.println("Member ID: " + member.getMemberID());
+				System.out.println("Fee paid: " + member.getFeePaid());
+				System.out.println();
+			}
+		}
+	}
+
+	public void getProductInfo() {
+		String search = getInput("Enter the name of the product: ");
+		ArrayList<Product> results = groceryStore.getProductInfo(search);
+		if (results.size() == 0) {
+			System.out.println("No products found with given criteria");
+		} else {
+			for (Product product : results) {
+				System.out.println("Product name: " + product.getName());
+				System.out.println("Product ID: " + product.getProductID());
+				System.out.println("Product price: " + product.getPrice());
+				System.out.println("Product stock: " + product.getCurrentStock());
+				System.out.println("Product reodrder quantity: " + product.getReorderLevel());
+				System.out.println();
+			}
+		}
+	}
+
 	// to implement
 
 	public void process() {
@@ -140,15 +212,27 @@ public class UserInterface {
 			case REMOVE_MEMBER:
 				removeMember();
 				break;
-			/*
-			 * case ADD_PRODUCT: addProduct(); break; case CHECK_OUT: checkOutItems();
-			 * break; case PROCESS_SHIPMENT: processShipment(); break; case CHANGE_PRICE:
-			 * changePrice(); break; case GET_PRODUCT_INFO: getProductInfo(); break; case
-			 * GET_MEMBER_INFO: getMemberInfo(); break; case PRINT_TRANSACTIONS:
-			 * printTransactions(); break; case LIST_OUTSTANDING_ORDERS: printOrders();
-			 * break; case LIST_MEMBERS: listMembers(); break; case LIST_PRODUCTS:
-			 * listProducts(); break;
-			 */
+			case ADD_PRODUCT:
+				addProduct();
+				break;
+			case CHECK_OUT:
+				checkOutItems();
+				break;
+			/*case PROCESS_SHIPMENT: processShipment(); break; */
+			case CHANGE_PRICE:
+				changePrice();
+				break;
+			case GET_PRODUCT_INFO:
+				getProductInfo();
+				break;
+			case GET_MEMBER_INFO:
+				getMemberInfo();
+				break;
+			/*case PRINT_TRANSACTIONS:
+			* printTransactions(); break; case LIST_OUTSTANDING_ORDERS: printOrders();
+			* break; case LIST_MEMBERS: listMembers(); break; case LIST_PRODUCTS:
+			* listProducts(); break;
+			*/
 			case SAVE:
 				save();
 				break;
