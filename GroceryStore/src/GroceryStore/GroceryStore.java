@@ -7,7 +7,6 @@ import java.util.Scanner;
 public class GroceryStore {
 	private ArrayList<Member> memberList;
 	private ArrayList<Product> productList;
-	private ArrayList<Transaction> transactionList;
 	private ArrayList<Shipment> shipmentList;
 
 	// singleton design pattern
@@ -16,7 +15,6 @@ public class GroceryStore {
 	private GroceryStore() {
 		this.memberList = new ArrayList<Member>();
 		this.productList = new ArrayList<Product>();
-		this.transactionList = new ArrayList<Transaction>();
 		this.shipmentList = new ArrayList<Shipment>();
 	};
 
@@ -27,23 +25,30 @@ public class GroceryStore {
 		return instance;
 	}
 
-	public Transaction getTransaction(int transactionId) {
-		return transactionList.get(transactionId);
-	}
-
 	public Product getProduct(int productId) {
-		return productList.get(productId);
+		for (Product product : productList) {
+			if (product.getProductID() == productId) {
+				return product;
+			}
+		}
+		return null;
 	}
 
 	public Shipment getShipment(int orderId) {
-		return shipmentList.get(orderId);
+		for (Shipment shipment : shipmentList) {
+			if (shipment.getOrderNumber() == orderId) {
+				return shipment;
+			}
+		}
+		return null;
 	}
 
 	// create date object, create member object, add member to list
-	public boolean enrollMember(String name, String address, String phoneNumber, LocalDate dateJoined, double feePaid) {
+	public Member enrollMember(String name, String address, String phoneNumber, LocalDate dateJoined, double feePaid) {
 		LocalDate date = LocalDate.now();
 		Member newMember = new Member(name, address, phoneNumber, date, feePaid);
-		return memberList.add(newMember);
+		memberList.add(newMember);
+		return newMember;
 	}
 
 	// remove member from list using member ID
@@ -66,12 +71,26 @@ public class GroceryStore {
 		return productList.add(product);
 	}
 
+	public Member verifyMember(int memberID) {
+		for (Member member : memberList) {
+			if (member.getMemberID() == memberID) {
+				return member;
+			}
+		}
+		return null;
+	}
+
 	// Checks out a member once they're done shopping. Creates a transaction with
 	// total price and product list and requests a shipment if product stock is
 	// below reorder level.
 	// TO DO: add quantities to transactions somehow
 	public void checkOutItems(int memId, LocalDate date) {
 		Scanner reader = new Scanner(System.in);
+		//verify member exists, return if not found
+		Member member = verifyMember(memId);
+		if (member == null) {
+			return;
+		}
 
 		Transaction transaction = new Transaction(memId, 0, date);
 		String pro;
@@ -114,7 +133,7 @@ public class GroceryStore {
 
 		// Set total and add transaction to the list
 		transaction.setTotal(total);
-		transactionList.add(transaction);
+		member.addTransaction(transaction);
 		reader.close();
 
 	}
@@ -130,6 +149,41 @@ public class GroceryStore {
 		return false;
 	}
 
+	public ArrayList<Shipment> getShipments() {
+		return shipmentList;
+	}
+
+	public Product processShipment(int orderNum) {
+		Shipment shipment = null;
+		Product product = null;
+		for (Shipment ship : shipmentList) {
+			if (ship.getOrderNumber() == orderNum) {
+				shipment = ship;
+				product = ship.getProduct();
+				break;
+			}
+		}
+
+		if (product == null) {
+			return null;
+		}
+
+		product.setCurrentStock(product.getCurrentStock() + shipment.getOrderedQuantity());
+		shipmentList.remove(shipment);
+		return product;
+	}
+
+	public ArrayList<Transaction> getTransactions(int memberId, LocalDate date1, LocalDate date2) {
+		ArrayList<Transaction> list = new ArrayList<>();
+
+		Member member = verifyMember(memberId);
+		if (member != null) {
+			return member.getTransactionList(date1, date2);
+		} else {
+			return null;
+		}
+	}
+
 	//searches through list of products for name and returns list of products that match criteria
 	public ArrayList<Product> getProductInfo(String search) {
 		ArrayList<Product> results = new ArrayList<>();
@@ -142,7 +196,7 @@ public class GroceryStore {
 		}
 		return results;
 	}
-	
+
 	//searches memberList and if the name contains search substring then returns list of members who fit criteria
 	public ArrayList<Member> getMemberInfo(String search) {
 		ArrayList<Member> results = new ArrayList<>();
@@ -154,7 +208,7 @@ public class GroceryStore {
 		}
 		return results;
 	}
-	
+
 	//This should print transactions between two dates
 	//This is step 9
 	//Isaiah: Still working on this, going to tackle this one in the morning
@@ -165,21 +219,20 @@ public class GroceryStore {
 		
 		return transactionList;
 	}*/
-	
-	
+
 	//This should return all the members
 	//This is step 11
-	public ArrayList<Member> getAllMemberInfo(){
+	public ArrayList<Member> getAllMemberInfo() {
 		ArrayList<Member> results = new ArrayList<>();
 		for (Member member : memberList) {
 			results.add(member);
 		}
 		return results;
 	}
-	
+
 	//This should return all the products on hand
 	//This is for step 12
-	public ArrayList<Product> getAllProducts(){
+	public ArrayList<Product> getAllProducts() {
 		ArrayList<Product> results = new ArrayList<>();
 		for (Product product : productList) {
 			results.add(product);

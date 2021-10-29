@@ -6,12 +6,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Scanner;
 
 import GroceryStore.GroceryStore;
 import GroceryStore.Member;
 import GroceryStore.Product;
+import GroceryStore.Shipment;
+import GroceryStore.Transaction;
 
 public class UserInterface {
 	private static UserInterface userInterface;
@@ -91,11 +94,11 @@ public class UserInterface {
 	public void close() {
 		scanner.close();
 	}
+
 	public int getNumberFromUser(String prompt) {
 		System.out.println(prompt);
 		String userInput = scanner.nextLine();
 		int toInt = Integer.parseInt(userInput); // This changes the String to an int
-		close();
 		return toInt;
 	}
 
@@ -103,7 +106,6 @@ public class UserInterface {
 		System.out.println(prompt);
 		String userInput = scanner.nextLine();
 		double toDouble = Double.parseDouble(userInput); // This changes the String to an int
-		close();
 		return toDouble;
 	}
 
@@ -130,11 +132,11 @@ public class UserInterface {
 		// that makes the most sense
 		double fee = 100.00;
 
-		boolean result = groceryStore.enrollMember(name, address, phoneNumber, date, fee);
-		if (!result) {
-			System.out.println("Could not add member");
+		Member result = groceryStore.enrollMember(name, address, phoneNumber, date, fee);
+		if (result != null) {
+			System.out.println("Member added. The member ID is: " + result.getMemberID());
 		} else {
-			System.out.println("Member added");
+			System.out.println("Could not add member");
 		}
 	}
 
@@ -162,7 +164,26 @@ public class UserInterface {
 		int memberID = getNumberFromUser("Enter member ID");
 		groceryStore.checkOutItems(memberID, date);
 	}
-	
+
+	public void processShipment() {
+		int id;
+		Product item;
+		int command;
+		do {
+			id = getNumberFromUser("Enter order number: ");
+			item = groceryStore.processShipment(id);
+			if (item != null) {
+				System.out.println("Product ID: " + item.getProductID());
+				System.out.println("Product name: " + item.getName());
+				System.out.println("New stock: " + item.getCurrentStock());
+			} else {
+				System.out.println("Shipment could not be processed");
+			}
+		} while ((command = getNumberFromUser(
+				"Process more shipments? Type 1 for \"yes\", any number for \"no\"")) == 1);
+
+	}
+
 	public void changePrice() {
 		int productID = getNumberFromUser("Enter product ID: ");
 		double newPrice = getPriceFromUser("Enter new price: ");
@@ -171,22 +192,6 @@ public class UserInterface {
 			System.out.println("New price has been set");
 		} else {
 			System.out.println("Product not found");
-		}
-	}
-	
-	public void getMemberInfo() {
-		String search = getInput("Enter the name you're looking for: ");
-		ArrayList<Member> results = groceryStore.getMemberInfo(search);
-		if (results.size() == 0) {
-			System.out.println("No members found with given criteria");
-		} else {
-			for (Member member : results) {
-				System.out.println("Member name: " + member.getName());
-				System.out.println("Address: " + member.getAddress());
-				System.out.println("Member ID: " + member.getMemberID());
-				System.out.println("Fee paid: " + member.getFeePaid());
-				System.out.println();
-			}
 		}
 	}
 
@@ -206,7 +211,67 @@ public class UserInterface {
 			}
 		}
 	}
-	
+
+	public void getMemberInfo() {
+		String search = getInput("Enter the name you're looking for: ");
+		ArrayList<Member> results = groceryStore.getMemberInfo(search);
+		if (results.size() == 0) {
+			System.out.println("No members found with given criteria");
+		} else {
+			for (Member member : results) {
+				System.out.println("Member name: " + member.getName());
+				System.out.println("Address: " + member.getAddress());
+				System.out.println("Member ID: " + member.getMemberID());
+				System.out.println("Fee paid: " + member.getFeePaid());
+				System.out.println();
+			}
+		}
+	}
+
+	//gets the transactions by member ID and 2 dates
+	public void printTransactions() {
+		int memberID = getNumberFromUser("Enter member ID");
+		String userDate1 = getInput("Please enter first date in format mm/dd/yyyy");
+		String userDate2 = getInput("Please enter second date in format mm/dd/yyyy");
+		//TODO: move the get date into separate function that has try/catch and returns the date
+		DateTimeFormatter format = DateTimeFormatter.ofPattern("MM/dd/uuuu");
+		LocalDate date1 = LocalDate.parse(userDate1, format);
+		LocalDate date2 = LocalDate.parse(userDate2, format);
+
+		if (!(date1.isBefore(date2) || date1.isEqual(date2))) {
+			System.out.println("Improper sequence of dates, first date is after the second date.");
+		} else {
+			ArrayList<Transaction> transactions = groceryStore.getTransactions(memberID, date1, date2);
+			if (transactions.isEmpty()) {
+				System.out.println("This member does not have any transactions");
+			}
+			if (transactions == null) {
+				System.out.println("Member does not exist");
+			} else {
+				for (Transaction transaction : transactions) {
+					//TODO print transactions. I think we need to implement the toString method and call it on each transaction
+				}
+			}
+		}
+
+	}
+
+	public void printOrders() {
+		ArrayList<Shipment> orders = groceryStore.getShipments();
+
+		if (!orders.isEmpty()) {
+			for (Shipment ship : orders) {
+				System.out.println("Order ID: " + ship.getOrderNumber());
+				System.out.println("Product name: " + ship.getProduct().getName());
+				System.out.println("Date of order: " + ship.getDate());
+				System.out.println("Quantity ordered: " + ship.getOrderedQuantity());
+			}
+		} else {
+			System.out.println("There are currently no outstanding orders.");
+		}
+
+	}
+
 	//This returns all the members
 	//Step 11
 	public void getAllMembersInfo() {
@@ -218,11 +283,11 @@ public class UserInterface {
 				System.out.println("Member name: " + member.getName());
 				System.out.println("Address: " + member.getAddress());
 				System.out.println("Member ID: " + member.getMemberID());
-				System.out.println("Fee paid: " + member.getFeePaid() +"\n");
+				System.out.println("Fee paid: " + member.getFeePaid() + "\n");
 			}
 		}
 	}
-	
+
 	//This returns all the product information
 	//Step 12
 	public void getAllProductInfo() {
@@ -230,16 +295,16 @@ public class UserInterface {
 		if (results.isEmpty()) {
 			System.out.println("There are currently no products listed.\n");
 		} else {
-		for (Product product : results) {
-			System.out.println("Product name: " + product.getName());
-			System.out.println("Product ID: " + product.getProductID());
-			System.out.println("Product price: " + product.getPrice());
-			System.out.println("Product stock: " + product.getCurrentStock());
-			System.out.println("Product reodrder quantity: " + product.getReorderLevel() + "\n");
+			for (Product product : results) {
+				System.out.println("Product name: " + product.getName());
+				System.out.println("Product ID: " + product.getProductID());
+				System.out.println("Product price: " + product.getPrice());
+				System.out.println("Product stock: " + product.getCurrentStock());
+				System.out.println("Product reodrder quantity: " + product.getReorderLevel() + "\n");
 			}
 		}
 	}
-	
+
 	// to implement
 
 	public void process() {
@@ -259,9 +324,9 @@ public class UserInterface {
 			case CHECK_OUT:
 				checkOutItems();
 				break;
-			/*case PROCESS_SHIPMENT:
-			 * processShipment();
-			 * break; */
+			case PROCESS_SHIPMENT:
+				processShipment();
+				break;
 			case CHANGE_PRICE:
 				changePrice();
 				break;
@@ -271,13 +336,12 @@ public class UserInterface {
 			case GET_MEMBER_INFO:
 				getMemberInfo();
 				break;
-			/*case PRINT_TRANSACTIONS:
+			case PRINT_TRANSACTIONS:
 				printTransactions();
 				break;
 			case LIST_OUTSTANDING_ORDERS:
 				printOrders();
 				break;
-				*/
 			case LIST_MEMBERS: //Step 11
 				getAllMembersInfo();
 				break;
