@@ -142,7 +142,7 @@ public class GroceryStore {
 		}
 		return results;
 	}
-
+	
 	//searches memberList and if the name contains search substring then returns list of members who fit criteria
 	public ArrayList<Member> getMemberInfo(String search) {
 		ArrayList<Member> results = new ArrayList<>();
@@ -159,7 +159,7 @@ public class GroceryStore {
 	//This is step 9
 	//Isaiah: Still working on this, going to tackle this one in the morning
 	//Need to validate the dates and then print all transactions between those dates
-	//for said member
+	//for said member.
 	/*public ArrayList<Transaction> printTransactions(int memberID, LocalDate date, LocalDate date2){
 		ArrayList<Transaction> results = new ArrayList<>();
 		
