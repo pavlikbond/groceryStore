@@ -47,7 +47,7 @@ public class UserInterface {
 	}
 
 	public void help() {
-		System.out.println("Enter a number between 0 and 12 as explained below:");
+		System.out.println("Enter a number between 0 and 14 as explained below:");
 		System.out.println(EXIT + " to Exit\n");
 		System.out.println(ENROLL_MEMBER + " to enroll a new member");
 		System.out.println(REMOVE_MEMBER + " to remove a member");
@@ -84,11 +84,18 @@ public class UserInterface {
 	// We can use this as the switch case for the switch statement
 	// Pavel: this will create a new Scanner object each time the user enters a
 	// number which I heard is not good, but I'm not sure
+	// Isaiah: Yeah you are right, it actually create a data leak. I created
+	// a method to just close the scanner since i can't call a static
+	// method in a return method. 
 	// I'll put it up top that way it can be used in multiple methods
+	public void close() {
+		scanner.close();
+	}
 	public int getNumberFromUser(String prompt) {
 		System.out.println(prompt);
 		String userInput = scanner.nextLine();
 		int toInt = Integer.parseInt(userInput); // This changes the String to an int
+		close();
 		return toInt;
 	}
 
@@ -96,6 +103,7 @@ public class UserInterface {
 		System.out.println(prompt);
 		String userInput = scanner.nextLine();
 		double toDouble = Double.parseDouble(userInput); // This changes the String to an int
+		close();
 		return toDouble;
 	}
 
@@ -154,7 +162,7 @@ public class UserInterface {
 		int memberID = getNumberFromUser("Enter member ID");
 		groceryStore.checkOutItems(memberID, date);
 	}
-
+	
 	public void changePrice() {
 		int productID = getNumberFromUser("Enter product ID: ");
 		double newPrice = getPriceFromUser("Enter new price: ");
@@ -165,7 +173,7 @@ public class UserInterface {
 			System.out.println("Product not found");
 		}
 	}
-
+	
 	public void getMemberInfo() {
 		String search = getInput("Enter the name you're looking for: ");
 		ArrayList<Member> results = groceryStore.getMemberInfo(search);
@@ -198,7 +206,40 @@ public class UserInterface {
 			}
 		}
 	}
-
+	
+	//This returns all the members
+	//Step 11
+	public void getAllMembersInfo() {
+		ArrayList<Member> results = groceryStore.getAllMemberInfo();
+		if (results.isEmpty()) {
+			System.out.println("There are currently no members listed.\n");
+		} else {
+			for (Member member : results) {
+				System.out.println("Member name: " + member.getName());
+				System.out.println("Address: " + member.getAddress());
+				System.out.println("Member ID: " + member.getMemberID());
+				System.out.println("Fee paid: " + member.getFeePaid() +"\n");
+			}
+		}
+	}
+	
+	//This returns all the product information
+	//Step 12
+	public void getAllProductInfo() {
+		ArrayList<Product> results = groceryStore.getAllProducts();
+		if (results.isEmpty()) {
+			System.out.println("There are currently no products listed.\n");
+		} else {
+		for (Product product : results) {
+			System.out.println("Product name: " + product.getName());
+			System.out.println("Product ID: " + product.getProductID());
+			System.out.println("Product price: " + product.getPrice());
+			System.out.println("Product stock: " + product.getCurrentStock());
+			System.out.println("Product reodrder quantity: " + product.getReorderLevel() + "\n");
+			}
+		}
+	}
+	
 	// to implement
 
 	public void process() {
@@ -218,7 +259,9 @@ public class UserInterface {
 			case CHECK_OUT:
 				checkOutItems();
 				break;
-			/*case PROCESS_SHIPMENT: processShipment(); break; */
+			/*case PROCESS_SHIPMENT:
+			 * processShipment();
+			 * break; */
 			case CHANGE_PRICE:
 				changePrice();
 				break;
@@ -229,10 +272,18 @@ public class UserInterface {
 				getMemberInfo();
 				break;
 			/*case PRINT_TRANSACTIONS:
-			* printTransactions(); break; case LIST_OUTSTANDING_ORDERS: printOrders();
-			* break; case LIST_MEMBERS: listMembers(); break; case LIST_PRODUCTS:
-			* listProducts(); break;
-			*/
+				printTransactions();
+				break;
+			case LIST_OUTSTANDING_ORDERS:
+				printOrders();
+				break;
+				*/
+			case LIST_MEMBERS: //Step 11
+				getAllMembersInfo();
+				break;
+			case LIST_PRODUCTS: //Step 12
+				getAllProductInfo();
+				break;
 			case SAVE:
 				save();
 				break;

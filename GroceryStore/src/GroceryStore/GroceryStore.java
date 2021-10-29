@@ -154,4 +154,36 @@ public class GroceryStore {
 		}
 		return results;
 	}
+	
+	//This should print transactions between two dates
+	//This is step 9
+	//Isaiah: Still working on this, going to tackle this one in the morning
+	//Need to validate the dates and then print all transactions between those dates
+	//for said member
+	/*public ArrayList<Transaction> printTransactions(int memberID, LocalDate date, LocalDate date2){
+		ArrayList<Transaction> results = new ArrayList<>();
+		
+		return transactionList;
+	}*/
+	
+	
+	//This should return all the members
+	//This is step 11
+	public ArrayList<Member> getAllMemberInfo(){
+		ArrayList<Member> results = new ArrayList<>();
+		for (Member member : memberList) {
+			results.add(member);
+		}
+		return results;
+	}
+	
+	//This should return all the products on hand
+	//This is for step 12
+	public ArrayList<Product> getAllProducts(){
+		ArrayList<Product> results = new ArrayList<>();
+		for (Product product : productList) {
+			results.add(product);
+		}
+		return (results);
+	}
 }
