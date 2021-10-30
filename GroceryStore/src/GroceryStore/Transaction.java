@@ -59,7 +59,10 @@ public class Transaction {
 
 	@Override
 	public String toString() {
-		return " "; // TODO: format string
+		//ToDo format string
+		return "Transaction ID: " + transactionID +
+				"\nTotal: " + total +
+				"\nDate: " + date;
 	}
 
 }

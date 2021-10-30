@@ -1,8 +1,11 @@
 package GroceryStore;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.text.ParseException;
 
 public class GroceryStore {
 	private ArrayList<Member> memberList;
@@ -175,6 +178,28 @@ public class GroceryStore {
 		return product;
 	}
 
+	//This should change the format and parse the dates
+	//This should validate the dates and throw exceptions
+	public boolean validateDate(String date) {
+		try {
+			DateFormat df = new SimpleDateFormat("mm/dd/yyyy");
+			df.format(date);
+			df.parse(date);
+			return true;
+		} catch (ParseException e) {
+			return false;
+		}
+	}
+	
+	//This should validate between the two dates
+	public boolean validBetweenDates (LocalDate date1, LocalDate date2) {
+		if (date1.isBefore(date2) && date2.isAfter(date1)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	
 	public ArrayList<Transaction> getTransactions(int memberId, LocalDate date1, LocalDate date2) {
 		ArrayList<Transaction> list = new ArrayList<>();
 
@@ -212,22 +237,8 @@ public class GroceryStore {
 		}
 		return results;
 	}
-
-	// This should print transactions between two dates
-	// This is step 9
-	// Isaiah: Still working on this, going to tackle this one in the morning
-	// Need to validate the dates and then print all transactions between those
-	// dates
-	// for said member.
-	/*
-	 * public ArrayList<Transaction> printTransactions(int memberID, LocalDate date,
-	 * LocalDate date2){ ArrayList<Transaction> results = new ArrayList<>();
-	 * 
-	 * return transactionList; }
-	 */
-
-	// This should return all the members
-	// This is step 11
+	//This should return all the members
+	//This is step 11
 	public ArrayList<Member> getAllMemberInfo() {
 		ArrayList<Member> results = new ArrayList<>();
 		for (Member member : memberList) {

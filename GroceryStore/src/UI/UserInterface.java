@@ -84,13 +84,7 @@ public class UserInterface {
 		}
 	}
 
-	// We can use this as the switch case for the switch statement
-	// Pavel: this will create a new Scanner object each time the user enters a
-	// number which I heard is not good, but I'm not sure
-	// Isaiah: Yeah you are right, it actually create a data leak. I created
-	// a method to just close the scanner since i can't call a static
-	// method in a return method. 
-	// I'll put it up top that way it can be used in multiple methods
+	//Method to close scanners
 	public void close() {
 		scanner.close();
 	}
@@ -229,30 +223,60 @@ public class UserInterface {
 	}
 
 	//gets the transactions by member ID and 2 dates
+	//Step 9
 	public void printTransactions() {
 		int memberID = getNumberFromUser("Enter member ID");
 		String userDate1 = getInput("Please enter first date in format mm/dd/yyyy");
 		String userDate2 = getInput("Please enter second date in format mm/dd/yyyy");
 		//TODO: move the get date into separate function that has try/catch and returns the date
-		DateTimeFormatter format = DateTimeFormatter.ofPattern("MM/dd/uuuu");
+		
+		//Validates first date
+		if (groceryStore.validateDate(userDate1) != true) {
+			return; //We can probably say its not a valid date
+		}
+		//Validates second date
+		if (groceryStore.validateDate(userDate2) != true) {
+			return;  //We can probably say its not a valid date
+		}
+		
+		//This formats the dates after they have been validated 
+		DateTimeFormatter format = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 		LocalDate date1 = LocalDate.parse(userDate1, format);
 		LocalDate date2 = LocalDate.parse(userDate2, format);
 
+		//This is going to make sure they enter dates one before the other
+		if (groceryStore.validBetweenDates(date1, date2) != true) {
+			System.out.println("You're first date must come before the second date");
+		} else {
+			ArrayList<Transaction> transactions = groceryStore.getTransactions(memberID, date1, date2);
+			if (transactions.isEmpty()) {
+				System.out.println("This member does not have any transactions");
+			} else {
+				for (Transaction transaction : transactions) {
+					transaction.toString();
+				}
+			}
+		}
+		
+		//LocalDate date1 = LocalDate.parse(userDate1, format);
+		//LocalDate date2 = LocalDate.parse(userDate2, format);
+
+		/*
 		if (!(date1.isBefore(date2) || date1.isEqual(date2))) {
 			System.out.println("Improper sequence of dates, first date is after the second date.");
 		} else {
 			ArrayList<Transaction> transactions = groceryStore.getTransactions(memberID, date1, date2);
 			if (transactions.isEmpty()) {
 				System.out.println("This member does not have any transactions");
-			}
+			} //I think we can get rid of this because if it is empty, it's empty
 			if (transactions == null) {
 				System.out.println("Member does not exist");
 			} else {
 				for (Transaction transaction : transactions) {
-					//TODO print transactions. I think we need to implement the toString method and call it on each transaction
+					transaction.toString();
 				}
 			}
-		}
+		}*/
 
 	}
 
