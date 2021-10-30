@@ -54,8 +54,9 @@ public class Transaction {
 	@Override
 	public String toString() {
 		//ToDo format string
-
-		return " ";
+		return "Transaction ID: " + transactionID +
+				"\nTotal: " + total +
+				"\nDate: " + date;
 	}
 
 }

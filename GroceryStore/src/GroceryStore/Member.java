@@ -70,7 +70,6 @@ public class Member {
 	//list of transactions based on certain dates
 	public ArrayList<Transaction> getTransactionList(LocalDate date1, LocalDate date2) {
 		ArrayList<Transaction> list = new ArrayList<Transaction>();
-
 		for (Transaction t : transactionList) {
 			if (validDate(date1, date2, t.getDate())) {
 				list.add(t);
@@ -80,6 +79,7 @@ public class Member {
 	}
 
 	//makes sure that compare date is in between date1 and date2 or equal to both
+	//Isaiah: Is this to compare the two dates together or?
 	private boolean validDate(LocalDate date1, LocalDate date2, LocalDate compare) {
 		if ((compare.isAfter(date1) || compare.isEqual(date1)) && (compare.isBefore(date2) || compare.isEqual(date2))) {
 			return true;
