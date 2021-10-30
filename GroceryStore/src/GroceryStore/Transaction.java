@@ -8,7 +8,6 @@ public class Transaction {
 	private int transactionID;
 	private int memeberID;
 	private ArrayList<Product> productList;
-	private ArrayList<Integer> quantityList;
 	private double total;
 	private LocalDate date;
 
@@ -20,9 +19,8 @@ public class Transaction {
 		this.productList = new ArrayList<Product>();
 	}
 
-	public void addProduct(Product product, int qunatity) {
+	public void addProduct(Product product) {
 		productList.add(product);
-		quantityList.add(qunatity);
 	}
 
 	public static int getIdCounter() {
@@ -39,10 +37,6 @@ public class Transaction {
 
 	public ArrayList<Product> getProductList() {
 		return productList;
-	}
-
-	public int getQuantity(int index) {
-		return quantityList.get(index);
 	}
 
 	public double getTotal() {
