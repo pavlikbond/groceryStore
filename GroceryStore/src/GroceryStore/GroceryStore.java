@@ -86,12 +86,12 @@ public class GroceryStore {
 	// Checks out a member once they're done shopping. Creates a transaction with
 	// total price and product list and requests a shipment if product stock is
 	// below reorder level.
-	// TO DO: add quantities to transactions somehow
 	public void checkOutItems(int memId, LocalDate date) {
 		Scanner reader = new Scanner(System.in);
-		//verify member exists, return if not found
+		// verify member exists, return if not found
 		Member member = verifyMember(memId);
 		if (member == null) {
+			reader.close();
 			return;
 		}
 
@@ -115,7 +115,7 @@ public class GroceryStore {
 				if (product.getName().compareToIgnoreCase(pro) == 0) {
 					// TO DO add quantity to transaction
 					product.setCurrentStock(product.getCurrentStock() - quantity);
-					transaction.addProduct(product);
+					transaction.addProduct(product, quantity);
 					total += product.getPrice() * quantity;
 
 					// make reorder if necessary
@@ -130,8 +130,10 @@ public class GroceryStore {
 		}
 
 		// Print products in transaction
+		int i = 0;
 		for (Product product : transaction.getProductList()) {
-			System.out.println(product.getName());
+			System.out.println(product.getName() + " " + transaction.getQuantity(i) + " $" + product.getPrice() + " $"
+					+ product.getPrice() * transaction.getQuantity(i));
 		}
 
 		// Set total and add transaction to the list
@@ -141,7 +143,7 @@ public class GroceryStore {
 
 	}
 
-	//uses id to look through list, if id matches, then the price is changed
+	// uses id to look through list, if id matches, then the price is changed
 	public boolean changePrice(int productID, double newPrice) {
 		for (Product product : productList) {
 			if (product.getProductID() == productID) {
@@ -209,12 +211,13 @@ public class GroceryStore {
 		}
 	}
 
-	//searches through list of products for name and returns list of products that match criteria
+	// searches through list of products for name and returns list of products that
+	// match criteria
 	public ArrayList<Product> getProductInfo(String search) {
 		ArrayList<Product> results = new ArrayList<>();
 		search = search.toLowerCase();
 		for (Product product : productList) {
-			//instead of contains maybe something else could be used?
+			// instead of contains maybe something else could be used?
 			if (product.getName().toLowerCase().contains(search)) {
 				results.add(product);
 			}
@@ -222,7 +225,8 @@ public class GroceryStore {
 		return results;
 	}
 
-	//searches memberList and if the name contains search substring then returns list of members who fit criteria
+	// searches memberList and if the name contains search substring then returns
+	// list of members who fit criteria
 	public ArrayList<Member> getMemberInfo(String search) {
 		ArrayList<Member> results = new ArrayList<>();
 		search = search.toLowerCase();
@@ -233,7 +237,6 @@ public class GroceryStore {
 		}
 		return results;
 	}
-
 	//This should return all the members
 	//This is step 11
 	public ArrayList<Member> getAllMemberInfo() {
@@ -244,8 +247,8 @@ public class GroceryStore {
 		return results;
 	}
 
-	//This should return all the products on hand
-	//This is for step 12
+	// This should return all the products on hand
+	// This is for step 12
 	public ArrayList<Product> getAllProducts() {
 		ArrayList<Product> results = new ArrayList<>();
 		for (Product product : productList) {
