@@ -8,6 +8,7 @@ public class Transaction {
 	private int transactionID;
 	private int memeberID;
 	private ArrayList<Product> productList;
+	private ArrayList<Integer> quantityList;
 	private double total;
 	private LocalDate date;
 
@@ -19,8 +20,9 @@ public class Transaction {
 		this.productList = new ArrayList<Product>();
 	}
 
-	public void addProduct(Product product) {
+	public void addProduct(Product product, int qunatity) {
 		productList.add(product);
+		quantityList.add(qunatity);
 	}
 
 	public static int getIdCounter() {
@@ -39,6 +41,10 @@ public class Transaction {
 		return productList;
 	}
 
+	public int getQuantity(int index) {
+		return quantityList.get(index);
+	}
+
 	public double getTotal() {
 		return total;
 	}
@@ -54,8 +60,7 @@ public class Transaction {
 	@Override
 	public String toString() {
 		//ToDo format string
-
-		return " ";
+		return "Transaction ID: " + transactionID + "\nTotal: " + total + "\nDate: " + date;
 	}
 
 }

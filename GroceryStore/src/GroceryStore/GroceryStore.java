@@ -1,5 +1,8 @@
 package GroceryStore;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -83,12 +86,12 @@ public class GroceryStore {
 	// Checks out a member once they're done shopping. Creates a transaction with
 	// total price and product list and requests a shipment if product stock is
 	// below reorder level.
-	// TO DO: add quantities to transactions somehow
 	public void checkOutItems(int memId, LocalDate date) {
 		Scanner reader = new Scanner(System.in);
-		//verify member exists, return if not found
+		// verify member exists, return if not found
 		Member member = verifyMember(memId);
 		if (member == null) {
+			reader.close();
 			return;
 		}
 
@@ -112,7 +115,7 @@ public class GroceryStore {
 				if (product.getName().compareToIgnoreCase(pro) == 0) {
 					// TO DO add quantity to transaction
 					product.setCurrentStock(product.getCurrentStock() - quantity);
-					transaction.addProduct(product);
+					transaction.addProduct(product, quantity);
 					total += product.getPrice() * quantity;
 
 					// make reorder if necessary
@@ -127,8 +130,10 @@ public class GroceryStore {
 		}
 
 		// Print products in transaction
+		int i = 0;
 		for (Product product : transaction.getProductList()) {
-			System.out.println(product.getName());
+			System.out.println(product.getName() + " " + transaction.getQuantity(i) + " $" + product.getPrice() + " $"
+					+ product.getPrice() * transaction.getQuantity(i));
 		}
 
 		// Set total and add transaction to the list
@@ -173,6 +178,28 @@ public class GroceryStore {
 		return product;
 	}
 
+	//This should change the format and parse the dates
+	//This should validate the dates and throw exceptions
+	public boolean validateDate(String date) {
+		try {
+			DateFormat df = new SimpleDateFormat("mm/dd/yyyy");
+			df.format(date);
+			df.parse(date);
+			return true;
+		} catch (ParseException e) {
+			return false;
+		}
+	}
+
+	//This should validate between the two dates
+	public boolean validBetweenDates(LocalDate date1, LocalDate date2) {
+		if (date1.isBefore(date2) && date2.isAfter(date1)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 	public ArrayList<Transaction> getTransactions(int memberId, LocalDate date1, LocalDate date2) {
 		ArrayList<Transaction> list = new ArrayList<>();
 
@@ -208,17 +235,6 @@ public class GroceryStore {
 		}
 		return results;
 	}
-
-	//This should print transactions between two dates
-	//This is step 9
-	//Isaiah: Still working on this, going to tackle this one in the morning
-	//Need to validate the dates and then print all transactions between those dates
-	//for said member.
-	/*public ArrayList<Transaction> printTransactions(int memberID, LocalDate date, LocalDate date2){
-		ArrayList<Transaction> results = new ArrayList<>();
-		
-		return transactionList;
-	}*/
 
 	//This should return all the members
 	//This is step 11
