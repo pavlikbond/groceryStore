@@ -239,6 +239,15 @@ public class UserInterface {
 			return; //We can probably say its not a valid date
 		}
 
+		//Validates first date
+		if (groceryStore.validateDate(userDate1) != true) {
+			return; //We can probably say its not a valid date
+		}
+		//Validates second date
+		if (groceryStore.validateDate(userDate2) != true) {
+			return; //We can probably say its not a valid date
+		}
+
 		//This formats the dates after they have been validated 
 		DateTimeFormatter format = DateTimeFormatter.ofPattern("MM/dd/yyyy");
 		LocalDate date1 = LocalDate.parse(userDate1, format);
@@ -258,27 +267,27 @@ public class UserInterface {
 			}
 		}
 
-		//LocalDate date1 = LocalDate.parse(userDate1, format);
-		//LocalDate date2 = LocalDate.parse(userDate2, format);
-
-		/*
-		if (!(date1.isBefore(date2) || date1.isEqual(date2))) {
-			System.out.println("Improper sequence of dates, first date is after the second date.");
-		} else {
-			ArrayList<Transaction> transactions = groceryStore.getTransactions(memberID, date1, date2);
-			if (transactions.isEmpty()) {
-				System.out.println("This member does not have any transactions");
-			} //I think we can get rid of this because if it is empty, it's empty
-			if (transactions == null) {
-				System.out.println("Member does not exist");
-			} else {
-				for (Transaction transaction : transactions) {
-					transaction.toString();
-				}
-			}
-		}*/
-
 	}
+
+	//LocalDate date1 = LocalDate.parse(userDate1, format);
+	//LocalDate date2 = LocalDate.parse(userDate2, format);
+
+	/*
+	if (!(date1.isBefore(date2) || date1.isEqual(date2))) {
+		System.out.println("Improper sequence of dates, first date is after the second date.");
+	} else {
+		ArrayList<Transaction> transactions = groceryStore.getTransactions(memberID, date1, date2);
+		if (transactions.isEmpty()) {
+			System.out.println("This member does not have any transactions");
+		} //I think we can get rid of this because if it is empty, it's empty
+		if (transactions == null) {
+			System.out.println("Member does not exist");
+		} else {
+			for (Transaction transaction : transactions) {
+				transaction.toString();
+			}
+		}
+	}*/
 
 	public void printOrders() {
 		ArrayList<Shipment> orders = groceryStore.getShipments();
