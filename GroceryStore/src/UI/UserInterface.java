@@ -10,6 +10,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import DataTransfer.Request;
+import DataTransfer.Result;
 import GroceryStore.GroceryStore;
 import GroceryStore.Member;
 import GroceryStore.Product;
@@ -116,18 +118,28 @@ public class UserInterface {
 
 	}
 
-	public void enrollMember() {
-		String name = getInput("Enter your name");
-		String address = getInput("Enter address");
-		String phoneNumber = getInput("Enter phone number");
+	public LocalDate getDate(String prompt) {
+		do {
+			try {
+				String date = getInput(prompt);
+				DateTimeFormatter format = DateTimeFormatter.ofPattern("MM/dd/yyyy");
+				return LocalDate.parse(date, format);
+			} catch (Exception fe) {
+				System.out.println("Format incorrect");
+			}
+		} while (true);
+	}
 
-		LocalDate date = LocalDate.now();
+	public void enrollMember() {
+		Request request = new Request();
+		request.setMemberName(getInput("Enter member name"));
+		request.setAddress(getInput("Enter member address"));
+		request.setPhoneNumber(getInput("Enter member phone number"));
+		request.setFeePaid(100.00);
 		// Pavel: is fee supposed to be a boolean? like, if they paid it or not? to me
 		// that makes the most sense
-		double fee = 100.00;
-
-		Member result = groceryStore.enrollMember(name, address, phoneNumber, date, fee);
-		if (result != null) {
+		Result result = groceryStore.enrollMember(request);
+		if (result.getResultCode() == result.OPERATION_COMPLETED) {
 			System.out.println("Member added. The member ID is: " + result.getMemberID());
 		} else {
 			System.out.println("Could not add member");
@@ -135,43 +147,89 @@ public class UserInterface {
 	}
 
 	public void removeMember() {
-		int id = getNumberFromUser("Enter member ID: ");
-		String result = groceryStore.removeMember(id);
-		System.out.println(result);
+		Request request = new Request();
+		request.setMemberID(getNumberFromUser("Enter member ID: "));
+		Result result = groceryStore.removeMember(request);
+		if (result.getResultCode() == Result.OPERATION_COMPLETED) {
+			System.out.println("Member Removed");
+		} else if (result.getResultCode() == Result.MEMBER_NOT_FOUND) {
+			System.out.println("Member not found");
+		} else {
+			//if the list fails to remove member for some reason
+			System.out.println("Member could not be removed");
+		}
 	}
 
 	public void addProduct() {
-		String productName = getInput("Enter product name :");
-		int stock = getNumberFromUser("Enter current stock :");
-		double price = getPriceFromUser("Enter current price: ");
-		int reorderPoint = getNumberFromUser("Enter reorder point");
-		boolean result = groceryStore.addProduct(productName, stock, price, reorderPoint);
-		if (result) {
-			System.out.println("Product added");
+		Request request = new Request();
+		request.setProductName(getInput("Enter product name :"));
+		request.setCurrentStock(getNumberFromUser("Enter current stock :"));
+		request.setPrice(getPriceFromUser("Enter current price: "));
+		request.setReorderLevel(getNumberFromUser("Enter reorder point"));
+		Result result = groceryStore.addProduct(request);
+		if (result.getResultCode() == Result.OPERATION_COMPLETED) {
+			System.out.println("Product added! Product ID is: " + result.getProductID());
 		} else {
 			System.out.println("Product could not be added");
 		}
 	}
 
+	//I'm still working on this please don't delete -Pavel. It works except for the reordering which I need to troubleshoot
+	public void checkOutItems1() {
+		int command;
+		Request request = new Request();
+		request.setDate(LocalDate.now());
+		request.setMemberID(getNumberFromUser("Enter member ID"));
+		Member member = groceryStore.verifyMember(request.getMemberID());
+		if (member == null) {
+			System.out.println("Member ID not found in records");
+			return;
+		}
+		Transaction transaction = new Transaction(0, request.getDate());
+		do {
+			request.setProductID(getNumberFromUser("Enter product ID: "));
+			request.setQuantity(getNumberFromUser("Enter quantity: "));
+			Result result = groceryStore.checkOutItems1(request);
+			if (result.getResultCode() == Result.PRODUCT_NOT_FOUND) {
+				System.out.println("Product not found");
+			} else {
+				transaction.addProduct(result.getProduct(), request.getQuantity());
+				double itemsTotal = request.getQuantity() * result.getPrice();
+				System.out.println(result.getProductName() + " " + request.getQuantity() + " $" + result.getPrice()
+						+ " $" + itemsTotal);
+			}
+		} while ((command = getNumberFromUser("Check out more items? Type 1 for \"yes\", any number for \"no\"")) == 1);
+		//print total
+		System.out.println("Total is: $" + transaction.getTotalAmount());
+		//take all itmes and order the ones that are needed
+		ArrayList<Shipment> shipments = groceryStore.orderProducts(transaction);
+		for (Shipment shipment : shipments) {
+			System.out.println("Item reordered: " + shipment.getProduct().getName());
+			System.out.println("Orered quantity: " + shipment.getOrderedQuantity());
+			System.out.println("Shipment order number: " + shipment.getOrderNumber());
+		}
+	}
+
+	//Original version
 	public void checkOutItems() {
-		LocalDate date = LocalDate.now();
-		int memberID = getNumberFromUser("Enter member ID");
-		groceryStore.checkOutItems(memberID, date);
+		Request request = new Request();
+		request.setDate(LocalDate.now());
+		request.setMemberID(getNumberFromUser("Enter member ID"));
+		groceryStore.checkOutItems(request);
 	}
 
 	public void processShipment() {
-		int id;
-		Product item;
+		Request request = new Request();
 		int command;
 		do {
-			id = getNumberFromUser("Enter order number: ");
-			item = groceryStore.processShipment(id);
-			if (item != null) {
-				System.out.println("Product ID: " + item.getProductID());
-				System.out.println("Product name: " + item.getName());
-				System.out.println("New stock: " + item.getCurrentStock());
+			request.setOrderNumber(getNumberFromUser("Enter order number: "));
+			Result result = groceryStore.processShipment(request);
+			if (result.getResultCode() == Result.OPERATION_COMPLETED) {
+				System.out.println("Product ID: " + result.getProductID());
+				System.out.println("Product name: " + result.getProductName());
+				System.out.println("New stock: " + result.getCurrentStock());
 			} else {
-				System.out.println("Shipment could not be processed");
+				System.out.println("Shipment not found");
 			}
 		} while ((command = getNumberFromUser(
 				"Process more shipments? Type 1 for \"yes\", any number for \"no\"")) == 1);
@@ -179,10 +237,11 @@ public class UserInterface {
 	}
 
 	public void changePrice() {
-		int productID = getNumberFromUser("Enter product ID: ");
-		double newPrice = getPriceFromUser("Enter new price: ");
-		boolean result = groceryStore.changePrice(productID, newPrice);
-		if (result) {
+		Request request = new Request();
+		request.setProductID(getNumberFromUser("Enter product ID: "));
+		request.setPrice(getPriceFromUser("Enter new price: "));
+		Result result = groceryStore.changePrice(request);
+		if (result.getResultCode() == Result.OPERATION_COMPLETED) {
 			System.out.println("New price has been set");
 		} else {
 			System.out.println("Product not found");
@@ -190,9 +249,11 @@ public class UserInterface {
 	}
 
 	public void getProductInfo() {
-		String search = getInput("Enter the name of the product: ");
-		ArrayList<Product> results = groceryStore.getProductInfo(search);
-		if (results.size() == 0) {
+		Request request = new Request();
+		request.setProductName(getInput("Enter the name of the product: "));
+		System.out.println(request.getProductName());
+		ArrayList<Product> results = groceryStore.getProductInfo(request);
+		if (results.isEmpty()) {
 			System.out.println("No products found with given criteria");
 		} else {
 			for (Product product : results) {
@@ -207,9 +268,10 @@ public class UserInterface {
 	}
 
 	public void getMemberInfo() {
-		String search = getInput("Enter the name you're looking for: ");
-		ArrayList<Member> results = groceryStore.getMemberInfo(search);
-		if (results.size() == 0) {
+		Request request = new Request();
+		request.setMemberName(getInput("Enter the name you're looking for: "));
+		ArrayList<Member> results = groceryStore.getMemberInfo(request);
+		if (results.isEmpty()) {
 			System.out.println("No members found with given criteria");
 		} else {
 			for (Member member : results) {
@@ -222,47 +284,38 @@ public class UserInterface {
 		}
 	}
 
+	//This should validate between the two dates
+	public boolean validBetweenDates(LocalDate date1, LocalDate date2) {
+		if (date1.isBefore(date2) || date1.isEqual(date2)) {
+			return true;
+		}
+		return false;
+	}
+
 	//gets the transactions by member ID and 2 dates
 	//Step 9
 	public void printTransactions() {
-		int memberID = getNumberFromUser("Enter member ID");
-		String userDate1 = getInput("Please enter first date in format mm/dd/yyyy");
-		String userDate2 = getInput("Please enter second date in format mm/dd/yyyy");
-		//TODO: move the get date into separate function that has try/catch and returns the date
+		Request request = new Request();
+		request.setMemberID(getNumberFromUser("Enter member ID"));
+		LocalDate date1 = getDate("Please enter first date in format mm/dd/yyyy");
+		LocalDate date2 = getDate("Please enter second date in format mm/dd/yyyy");
+		request.setStartDate(date1);
+		request.setEndDate(date2);
 
-		//Validates first date
-		if (groceryStore.validateDate(userDate1) != true) {
-			return; //We can probably say its not a valid date
-		}
-		//Validates second date
-		if (groceryStore.validateDate(userDate2) != true) {
-			return; //We can probably say its not a valid date
-		}
-
-		//Validates first date
-		if (groceryStore.validateDate(userDate1) != true) {
-			return; //We can probably say its not a valid date
-		}
-		//Validates second date
-		if (groceryStore.validateDate(userDate2) != true) {
-			return; //We can probably say its not a valid date
-		}
-
-		//This formats the dates after they have been validated 
-		DateTimeFormatter format = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-		LocalDate date1 = LocalDate.parse(userDate1, format);
-		LocalDate date2 = LocalDate.parse(userDate2, format);
-
-		//This is going to make sure they enter dates one before the other
-		if (groceryStore.validBetweenDates(date1, date2) != true) {
+		if (validBetweenDates(date1, date2) != true) {
 			System.out.println("You're first date must come before the second date");
 		} else {
-			ArrayList<Transaction> transactions = groceryStore.getTransactions(memberID, date1, date2);
-			if (transactions.isEmpty()) {
+			ArrayList<Transaction> result = groceryStore.getTransactions(request);
+			if (result == null) {
+				//We still need this because null is returned if member is not found, but list of 0 is returned if member
+				//is found but no transactions matched criteria
+				System.out.println("Member does not exist: ");
+			} else if (result.isEmpty()) {
 				System.out.println("This member does not have any transactions");
 			} else {
-				for (Transaction transaction : transactions) {
-					transaction.toString();
+				for (Transaction transaction : result) {
+					System.out.println(transaction.toString());
+					System.out.println();
 				}
 			}
 		}
@@ -291,7 +344,6 @@ public class UserInterface {
 
 	public void printOrders() {
 		ArrayList<Shipment> orders = groceryStore.getShipments();
-
 		if (!orders.isEmpty()) {
 			for (Shipment ship : orders) {
 				System.out.println("Order ID: " + ship.getOrderNumber());
@@ -314,8 +366,9 @@ public class UserInterface {
 		} else {
 			for (Member member : results) {
 				System.out.println("Member name: " + member.getName());
-				System.out.println("Address: " + member.getAddress());
 				System.out.println("Member ID: " + member.getMemberID());
+				System.out.println("Address: " + member.getAddress());
+				System.out.println("Member phone muber: " + member.getPhoneNumber());
 				System.out.println("Fee paid: " + member.getFeePaid() + "\n");
 			}
 		}
@@ -338,12 +391,10 @@ public class UserInterface {
 		}
 	}
 
-	// to implement
-
 	public void process() {
 		int userInput;
 		help();
-		while ((userInput = getNumberFromUser("Enter command ")) != 0) {
+		while ((userInput = getNumberFromUser("Enter command. Enter " + HELP + " for help.")) != 0) {
 			switch (userInput) {
 			case ENROLL_MEMBER:
 				enrollMember();
@@ -395,7 +446,6 @@ public class UserInterface {
 
 		GroceryStore store = GroceryStore.getInstance();
 		UserInterface.instance().process();
-		LocalDate date = LocalDate.now();
 
 		/*
 		 * store.enrollMember("Pavel Bondarenko", "123 Main St. Chaska, MN 55318",

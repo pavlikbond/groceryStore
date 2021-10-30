@@ -78,10 +78,13 @@ public class Member {
 		return list;
 	}
 
-	//makes sure that compare date is in between date1 and date2 or equal to both
+	//makes sure that compare date is in between date1 and date2 or equal to one of them
 	//Isaiah: Is this to compare the two dates together or?
-	private boolean validDate(LocalDate date1, LocalDate date2, LocalDate compare) {
-		if ((compare.isAfter(date1) || compare.isEqual(date1)) && (compare.isBefore(date2) || compare.isEqual(date2))) {
+	//Pavel: This is to make sure that transaction date is between the dates the user requested, 
+	//since we're not pulling ALL transactions, only the ones in between the specified dates
+	private boolean validDate(LocalDate date1, LocalDate date2, LocalDate transactionDate) {
+		if ((transactionDate.isAfter(date1) || transactionDate.isEqual(date1))
+				&& (transactionDate.isBefore(date2) || transactionDate.isEqual(date2))) {
 			return true;
 		}
 		return false;

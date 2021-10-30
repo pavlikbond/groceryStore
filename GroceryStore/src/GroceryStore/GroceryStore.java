@@ -1,17 +1,17 @@
 package GroceryStore;
 
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Scanner;
+
+import DataTransfer.Request;
+import DataTransfer.Result;
 
 public class GroceryStore {
 	private ArrayList<Member> memberList;
 	private ArrayList<Product> productList;
 	private ArrayList<Shipment> shipmentList;
-
+	Scanner reader = new Scanner(System.in);
 	// singleton design pattern
 	private static GroceryStore instance = null;
 
@@ -46,34 +46,6 @@ public class GroceryStore {
 		return null;
 	}
 
-	// create date object, create member object, add member to list
-	public Member enrollMember(String name, String address, String phoneNumber, LocalDate dateJoined, double feePaid) {
-		LocalDate date = LocalDate.now();
-		Member newMember = new Member(name, address, phoneNumber, date, feePaid);
-		memberList.add(newMember);
-		return newMember;
-	}
-
-	// remove member from list using member ID
-	public String removeMember(int memberID) {
-		for (Member member : memberList) {
-			if (member.getMemberID() == memberID) {
-				// we could create a list of removed members and just transfer it?
-				memberList.remove(member);
-				return "Member removed";
-			}
-		}
-		return "Member doesn't exist";
-	}
-
-	// Add a product to the product list with product name, stock, price and reorder
-	// value
-	public boolean addProduct(String product_name, int stock, double price, int reorder) {
-		Product product = new Product(product_name, stock, price, reorder);
-
-		return productList.add(product);
-	}
-
 	public Member verifyMember(int memberID) {
 		for (Member member : memberList) {
 			if (member.getMemberID() == memberID) {
@@ -83,19 +55,87 @@ public class GroceryStore {
 		return null;
 	}
 
+	// create date object, create member object, add member to list
+	public Result enrollMember(Request request) {
+		Result result = new Result();
+		LocalDate date = LocalDate.now();
+		Member newMember = new Member(request.getMemberName(), request.getAddress(), request.getPhoneNumber(), date,
+				request.getFeePaid());
+		if (memberList.add(newMember)) {
+			result.setResultCode(Result.OPERATION_COMPLETED);
+			result.setMemberFields(newMember);
+			return result;
+		}
+		result.setResultCode(Result.OPERATION_FAILED);
+		return result;
+	}
+
+	// remove member from list using member ID
+	public Result removeMember(Request request) {
+		Result result = new Result();
+		Member member = verifyMember(request.getMemberID());
+		if (member != null) {
+			if (memberList.remove(member)) {
+				result.setResultCode(Result.OPERATION_COMPLETED);
+				return result;
+			} else {
+				result.setResultCode(Result.OPERATION_FAILED);
+				return result;
+			}
+		} else {
+			result.setResultCode(Result.MEMBER_NOT_FOUND);
+			return result;
+		}
+	}
+
+	// Add a product to the product list with product name, stock, price and reorder
+	// value
+	public Result addProduct(Request request) {
+		Result result = new Result();
+		Product product = new Product(request.getProductName(), request.getCurrentStock(), request.getPrice(),
+				request.getReorderLevel());
+		if (productList.add(product)) {
+			result.setResultCode(Result.OPERATION_COMPLETED);
+			result.setProductFields(product);
+			return result;
+		} else {
+			result.setResultCode(Result.OPERATION_FAILED);
+			return result;
+		}
+	}
+
+	//Still working on it, do not delete.
+	public Result checkOutItems1(Request request) {
+		Result result = new Result();
+		Transaction transaction = new Transaction(0, request.getDate());
+		Product product = getProduct(request.getProductID());
+		//member already verified, this is just to get the member object
+		Member member = verifyMember(request.getMemberID());
+		if (product != null) {
+			result.setProduct(product);
+			result.setProductFields(product);
+			result.setResultCode(Result.OPERATION_COMPLETED);
+			return result;
+		} else {
+			result.setResultCode(Result.PRODUCT_NOT_FOUND);
+			return result;
+		}
+	}
+
+	//Still working on it do not delete
+	public ArrayList<Shipment> orderProducts(Transaction transaction) {
+		ArrayList<Shipment> shipments = transaction.orderProducts();
+		shipmentList.addAll(shipments);
+		return shipments;
+	}
+
 	// Checks out a member once they're done shopping. Creates a transaction with
 	// total price and product list and requests a shipment if product stock is
 	// below reorder level.
-	public void checkOutItems(int memId, LocalDate date) {
-		Scanner reader = new Scanner(System.in);
-		// verify member exists, return if not found
-		Member member = verifyMember(memId);
-		if (member == null) {
-			reader.close();
-			return;
-		}
-
-		Transaction transaction = new Transaction(memId, 0, date);
+	public void checkOutItems(Request request) {
+		Result result = new Result();
+		Transaction transaction = new Transaction(0, request.getDate());
+		Member member = verifyMember(request.getMemberID());
 		String pro;
 		int quantity;
 		double total = 0;
@@ -144,80 +184,67 @@ public class GroceryStore {
 	}
 
 	//uses id to look through list, if id matches, then the price is changed
-	public boolean changePrice(int productID, double newPrice) {
+	public Result changePrice(Request request) {
+		Result result = new Result();
 		for (Product product : productList) {
-			if (product.getProductID() == productID) {
-				product.setPrice(newPrice);
-				return true;
+			if (product.getProductID() == request.getProductID()) {
+				product.setPrice(request.getPrice());
+				result.setResultCode(Result.OPERATION_COMPLETED);
+				return result;
 			}
 		}
-		return false;
+		result.setResultCode(Result.PRODUCT_NOT_FOUND);
+		return result;
 	}
 
 	public ArrayList<Shipment> getShipments() {
 		return shipmentList;
 	}
 
-	public Product processShipment(int orderNum) {
-		Shipment shipment = null;
-		Product product = null;
-		for (Shipment ship : shipmentList) {
-			if (ship.getOrderNumber() == orderNum) {
-				shipment = ship;
-				product = ship.getProduct();
-				break;
+	//helper method to validate shipment exists
+	public Shipment findShipment(int orderNum) {
+		for (Shipment shipment : shipmentList) {
+			if (shipment.getOrderNumber() == orderNum) {
+				return shipment;
 			}
 		}
-
-		if (product == null) {
-			return null;
-		}
-
-		product.setCurrentStock(product.getCurrentStock() + shipment.getOrderedQuantity());
-		shipmentList.remove(shipment);
-		return product;
+		return null;
 	}
 
-	//This should change the format and parse the dates
-	//This should validate the dates and throw exceptions
-	public boolean validateDate(String date) {
-		try {
-			DateFormat df = new SimpleDateFormat("mm/dd/yyyy");
-			df.format(date);
-			df.parse(date);
-			return true;
-		} catch (ParseException e) {
-			return false;
-		}
-	}
-
-	//This should validate between the two dates
-	public boolean validBetweenDates(LocalDate date1, LocalDate date2) {
-		if (date1.isBefore(date2) && date2.isAfter(date1)) {
-			return true;
+	public Result processShipment(Request request) {
+		Result result = new Result();
+		Product product;
+		Shipment shipment = findShipment(request.getOrderNumber());
+		if (shipment != null) {
+			product = shipment.getProduct();
+			product.setCurrentStock(product.getCurrentStock() + shipment.getOrderedQuantity());
+			shipmentList.remove(shipment);
+			result.setResultCode(Result.OPERATION_COMPLETED);
+			result.setProductFields(product);
+			return result;
 		} else {
-			return false;
+			result.setResultCode(Result.SHIPMENT_NOT_FOUND);
+			return result;
 		}
 	}
 
-	public ArrayList<Transaction> getTransactions(int memberId, LocalDate date1, LocalDate date2) {
+	public ArrayList<Transaction> getTransactions(Request request) {
 		ArrayList<Transaction> list = new ArrayList<>();
-
-		Member member = verifyMember(memberId);
+		Result result = new Result();
+		Member member = verifyMember(request.getMemberID());
 		if (member != null) {
-			return member.getTransactionList(date1, date2);
+			return member.getTransactionList(request.getStartDate(), request.getEndDate());
 		} else {
 			return null;
 		}
 	}
 
 	//searches through list of products for name and returns list of products that match criteria
-	public ArrayList<Product> getProductInfo(String search) {
+	public ArrayList<Product> getProductInfo(Request request) {
 		ArrayList<Product> results = new ArrayList<>();
-		search = search.toLowerCase();
+		String search = request.getProductName().toLowerCase();
 		for (Product product : productList) {
-			//instead of contains maybe something else could be used?
-			if (product.getName().toLowerCase().contains(search)) {
+			if (product.getName().toLowerCase().startsWith(search)) {
 				results.add(product);
 			}
 		}
@@ -225,11 +252,11 @@ public class GroceryStore {
 	}
 
 	//searches memberList and if the name contains search substring then returns list of members who fit criteria
-	public ArrayList<Member> getMemberInfo(String search) {
+	public ArrayList<Member> getMemberInfo(Request request) {
 		ArrayList<Member> results = new ArrayList<>();
-		search = search.toLowerCase();
+		String search = request.getMemberName().toLowerCase();
 		for (Member member : memberList) {
-			if (member.getName().toLowerCase().contains(search)) {
+			if (member.getName().toLowerCase().startsWith(search)) {
 				results.add(member);
 			}
 		}
@@ -239,20 +266,14 @@ public class GroceryStore {
 	//This should return all the members
 	//This is step 11
 	public ArrayList<Member> getAllMemberInfo() {
-		ArrayList<Member> results = new ArrayList<>();
-		for (Member member : memberList) {
-			results.add(member);
-		}
-		return results;
+		//this makes a copy and returns it without doing the for loop
+		return new ArrayList<>(memberList);
 	}
 
 	//This should return all the products on hand
 	//This is for step 12
 	public ArrayList<Product> getAllProducts() {
-		ArrayList<Product> results = new ArrayList<>();
-		for (Product product : productList) {
-			results.add(product);
-		}
-		return (results);
+		//this makes a copy and returns it without doing the for loop
+		return new ArrayList<>(productList);
 	}
 }

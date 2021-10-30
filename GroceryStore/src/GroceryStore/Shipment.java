@@ -4,7 +4,7 @@ import java.time.LocalDate;
 
 public class Shipment {
 
-	private static int orderCounter = 0;
+	private static int orderCounter = 1;
 	private Product product;
 	private int orderedQuantity;
 	private int orderNumber;
@@ -14,9 +14,8 @@ public class Shipment {
 	public Shipment(Product product) {
 		this.product = product;
 		this.orderedQuantity = product.getReorderLevel() * 2;
-		orderNumber = orderCounter;
+		orderNumber = orderCounter++;
 		date = LocalDate.now();
-		orderCounter++;
 	}
 
 	// Processes the shipment that hasn't been processed already.

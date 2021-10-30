@@ -45,4 +45,10 @@ public class Product {
 	public int getReorderLevel() {
 		return reorderLevel;
 	}
+
+	@Override
+	public String toString() {
+		return "Product name: " + name + ", price: " + price;
+	}
+
 }
