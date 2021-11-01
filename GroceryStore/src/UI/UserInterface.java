@@ -356,10 +356,9 @@ public class UserInterface {
 		} else {
 			for (Member member : results) {
 				System.out.println("Member name: " + member.getName());
-				System.out.println("Member ID: " + member.getMemberID());
 				System.out.println("Address: " + member.getAddress());
-				System.out.println("Member phone muber: " + member.getPhoneNumber());
-				System.out.println("Fee paid: " + member.getFeePaid() + "\n");
+				System.out.println("Member phone number: " + member.getPhoneNumber());
+				System.out.println("Date joined: " + member.getDateJoined() + "\n");
 			}
 		}
 	}
