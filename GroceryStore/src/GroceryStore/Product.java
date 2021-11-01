@@ -56,10 +56,12 @@ public class Product implements Serializable {
 		return "Product name: " + name + ", price: $" + price;
 	}
 
+	//saves idcounter
 	public static void save(ObjectOutputStream output) throws IOException {
 		output.writeObject(idCounter);
 	}
 
+	//retrieves idcounter
 	public static void retrieve(ObjectInputStream input) throws IOException, ClassNotFoundException {
 		idCounter = (int) input.readObject();
 	}

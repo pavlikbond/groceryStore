@@ -8,7 +8,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Scanner;
 
 import DataTransfer.Request;
 import DataTransfer.Result;
@@ -17,7 +16,6 @@ public class GroceryStore implements Serializable {
 	private ArrayList<Member> memberList;
 	private ArrayList<Product> productList;
 	private ArrayList<Shipment> shipmentList;
-	transient Scanner reader = new Scanner(System.in);
 	// singleton design pattern
 	private static GroceryStore instance = null;
 
@@ -34,6 +32,7 @@ public class GroceryStore implements Serializable {
 		return instance;
 	}
 
+	//searches through productlist by Id and returns product if found
 	public Product getProduct(int productId) {
 		for (Product product : productList) {
 			if (product.getProductID() == productId) {
@@ -43,6 +42,7 @@ public class GroceryStore implements Serializable {
 		return null;
 	}
 
+	//searches through shipment list and returns shipment if found
 	public Shipment getShipment(int orderId) {
 		for (Shipment shipment : shipmentList) {
 			if (shipment.getOrderNumber() == orderId) {
@@ -52,7 +52,8 @@ public class GroceryStore implements Serializable {
 		return null;
 	}
 
-	public Member verifyMember(int memberID) {
+	//searches through memeberlist and returns memeber if found
+	public Member getMember(int memberID) {
 		for (Member member : memberList) {
 			if (member.getMemberID() == memberID) {
 				return member;
@@ -79,7 +80,7 @@ public class GroceryStore implements Serializable {
 	// remove member from list using member ID
 	public Result removeMember(Request request) {
 		Result result = new Result();
-		Member member = verifyMember(request.getMemberID());
+		Member member = getMember(request.getMemberID());
 		if (member != null) {
 			if (memberList.remove(member)) {
 				result.setResultCode(Result.OPERATION_COMPLETED);
@@ -119,10 +120,10 @@ public class GroceryStore implements Serializable {
 		}
 	}
 
-	//Still working on it, do not delete.
-	public Result checkOutItems1(Request request) {
+	//checkout out items, fails if qty is greater than stock or product not found
+	public Result checkOutItems(Request request) {
 		Result result = new Result();
-		Transaction transaction = new Transaction(0, request.getDate());
+		LocalDate date = LocalDate.now();
 		Product product = getProduct(request.getProductID());
 		if (product != null) {
 			result.setProduct(product);
@@ -141,70 +142,17 @@ public class GroceryStore implements Serializable {
 		}
 	}
 
-	//Still working on it do not delete
+	//returns list of shipments for checked out items if qty < reorderLevel
 	public ArrayList<Shipment> orderProducts(Transaction transaction) {
 		ArrayList<Shipment> shipments = transaction.orderProducts();
 		shipmentList.addAll(shipments);
 		return shipments;
 	}
 
+	//adds transaction to member after checkout
 	public void addTransaction(Request request) {
-		Member member = verifyMember(request.getMemberID());
+		Member member = getMember(request.getMemberID());
 		member.addTransaction(request.getTransaction());
-	}
-
-	// Checks out a member once they're done shopping. Creates a transaction with
-	// total price and product list and requests a shipment if product stock is
-	// below reorder level.
-	public void checkOutItems(Request request) {
-		Result result = new Result();
-		Transaction transaction = new Transaction(0, request.getDate());
-		Member member = verifyMember(request.getMemberID());
-		String pro;
-		int quantity;
-		double total = 0;
-
-		while (true) {
-			System.out.println("Enter Product ID and quantity Ex. 'a 5'. Enter 0 to quit:");
-
-			// user enters data
-			pro = reader.next();
-			if (pro.compareTo("0") == 0) {
-				break;
-			}
-			quantity = reader.nextInt();
-
-			// Find matching product in list
-			for (Product product : productList) {
-				if (product.getName().compareToIgnoreCase(pro) == 0) {
-					// TO DO add quantity to transaction
-					product.setCurrentStock(product.getCurrentStock() - quantity);
-					transaction.addProduct(product, quantity);
-					total += product.getPrice() * quantity;
-
-					// make reorder if necessary
-					if (product.getCurrentStock() <= product.getReorderLevel()) {
-						shipmentList.add(new Shipment(product));
-						System.out.println("New order has been placed for: " + product.getName());
-					}
-
-					break;
-				}
-			}
-		}
-
-		// Print products in transaction
-		int i = 0;
-		for (Product product : transaction.getProductList()) {
-			System.out.println(product.getName() + " " + transaction.getQuantity(i) + " $" + product.getPrice() + " $"
-					+ product.getPrice() * transaction.getQuantity(i));
-		}
-
-		// Set total and add transaction to the list
-		transaction.setTotal(total);
-		member.addTransaction(transaction);
-		reader.close();
-
 	}
 
 	//uses id to look through list, if id matches, then the price is changed
@@ -214,6 +162,7 @@ public class GroceryStore implements Serializable {
 			if (product.getProductID() == request.getProductID()) {
 				product.setPrice(request.getPrice());
 				result.setResultCode(Result.OPERATION_COMPLETED);
+				result.setPrice(product.getPrice());
 				return result;
 			}
 		}
@@ -221,8 +170,9 @@ public class GroceryStore implements Serializable {
 		return result;
 	}
 
+	//returns copy of shipment list
 	public ArrayList<Shipment> getShipments() {
-		return shipmentList;
+		return new ArrayList<>(shipmentList);
 	}
 
 	//helper method to validate shipment exists
@@ -235,6 +185,7 @@ public class GroceryStore implements Serializable {
 		return null;
 	}
 
+	//method to process shipment, adds to current stock of product
 	public Result processShipment(Request request) {
 		Result result = new Result();
 		Product product;
@@ -252,10 +203,11 @@ public class GroceryStore implements Serializable {
 		}
 	}
 
+	//returns a list of transactions that match the member Id and is withing specified dates
 	public ArrayList<Transaction> getTransactions(Request request) {
 		ArrayList<Transaction> list = new ArrayList<>();
 		Result result = new Result();
-		Member member = verifyMember(request.getMemberID());
+		Member member = getMember(request.getMemberID());
 		if (member != null) {
 			return member.getTransactionList(request.getStartDate(), request.getEndDate());
 		} else {
@@ -301,6 +253,7 @@ public class GroceryStore implements Serializable {
 		return new ArrayList<>(productList);
 	}
 
+	//saves the GroceryStore object
 	public static boolean save() {
 		try {
 			FileOutputStream file = new FileOutputStream("GroceryStoreData");
@@ -318,6 +271,7 @@ public class GroceryStore implements Serializable {
 		}
 	}
 
+	//looks for and retrieves GroceryStore object
 	public static GroceryStore retrieve() {
 		try {
 			FileInputStream file = new FileInputStream("GroceryStoreData");
@@ -331,8 +285,8 @@ public class GroceryStore implements Serializable {
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 			return null;
-		} catch (ClassNotFoundException cnfe) {
-			cnfe.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
 			return null;
 		}
 	}

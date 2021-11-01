@@ -13,27 +13,12 @@ public class Shipment implements Serializable {
 	private int orderedQuantity;
 	private int orderNumber;
 	private LocalDate date;
-	private boolean processed = false;
 
 	public Shipment(Product product) {
 		this.product = product;
 		this.orderedQuantity = product.getReorderLevel() * 2;
 		orderNumber = orderCounter++;
 		date = LocalDate.now();
-	}
-
-	// Processes the shipment that hasn't been processed already.
-	public void process() {
-		if (processed == true) {
-			System.out.println("Error: Shipment has already been processed!");
-			return;
-		}
-
-		processed = true;
-
-		product.setCurrentStock(product.getCurrentStock() + orderedQuantity);
-
-		System.out.println("Shipment " + orderNumber + " has been processed for " + product.getName());
 	}
 
 	public Product getProduct() {
@@ -50,10 +35,6 @@ public class Shipment implements Serializable {
 
 	public LocalDate getDate() {
 		return date;
-	}
-
-	public boolean isProcessed() {
-		return processed;
 	}
 
 	public static void save(ObjectOutputStream output) throws IOException {

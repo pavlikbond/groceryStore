@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Random;
 import java.util.Scanner;
 
 import DataTransfer.Request;
@@ -41,7 +42,12 @@ public class UserInterface {
 		if (getNumberFromUser("Retreive data? Enter \"1\" for yes, any other number for no") == 1) {
 			retrieve();
 		} else {
-			groceryStore = GroceryStore.getInstance();
+			if (getNumberFromUser("Run test bed? Enter \"1\" for yes, any other number for no") == 1) {
+				groceryStore = GroceryStore.getInstance();
+				test();
+			} else {
+				groceryStore = GroceryStore.getInstance();
+			}
 		}
 	}
 
@@ -138,8 +144,6 @@ public class UserInterface {
 		request.setAddress(getInput("Enter member address"));
 		request.setPhoneNumber(getInput("Enter member phone number"));
 		request.setFeePaid(100.00);
-		// Pavel: is fee supposed to be a boolean? like, if they paid it or not? to me
-		// that makes the most sense
 		Result result = groceryStore.enrollMember(request);
 		if (result.getResultCode() == result.OPERATION_COMPLETED) {
 			System.out.println("Member added. The member ID is: " + result.getMemberID());
@@ -179,21 +183,20 @@ public class UserInterface {
 	}
 
 	//I'm still working on this please don't delete -Pavel. It works except for the reordering which I need to troubleshoot
-	public void checkOutItems1() {
+	public void checkOutItems() {
 		int command;
 		Request request = new Request();
-		request.setDate(LocalDate.now());
 		request.setMemberID(getNumberFromUser("Enter member ID"));
-		Member member = groceryStore.verifyMember(request.getMemberID());
+		Member member = groceryStore.getMember(request.getMemberID());
 		if (member == null) {
 			System.out.println("Member ID not found in records");
 			return;
 		}
-		Transaction transaction = new Transaction(0, request.getDate());
+		Transaction transaction = new Transaction(0, LocalDate.now());
 		do {
 			request.setProductID(getNumberFromUser("Enter product ID: "));
 			request.setQuantity(getNumberFromUser("Enter quantity: "));
-			Result result = groceryStore.checkOutItems1(request);
+			Result result = groceryStore.checkOutItems(request);
 			if (result.getResultCode() == Result.PRODUCT_NOT_FOUND) {
 				System.out.println("Product not found");
 			} else if (result.getResultCode() == Result.QUANTITY_EXCEEDS_STOCK) {
@@ -217,14 +220,6 @@ public class UserInterface {
 			System.out.println("Orered quantity: " + shipment.getOrderedQuantity());
 			System.out.println("Shipment order number: " + shipment.getOrderNumber());
 		}
-	}
-
-	//Original version
-	public void checkOutItems() {
-		Request request = new Request();
-		request.setDate(LocalDate.now());
-		request.setMemberID(getNumberFromUser("Enter member ID"));
-		groceryStore.checkOutItems(request);
 	}
 
 	public void processShipment() {
@@ -358,6 +353,7 @@ public class UserInterface {
 				System.out.println("Member name: " + member.getName());
 				System.out.println("Address: " + member.getAddress());
 				System.out.println("Member phone number: " + member.getPhoneNumber());
+				System.out.println("Member ID: " + member.getMemberID());
 				System.out.println("Date joined: " + member.getDateJoined() + "\n");
 			}
 		}
@@ -420,7 +416,7 @@ public class UserInterface {
 				addProduct();
 				break;
 			case CHECK_OUT:
-				checkOutItems1();
+				checkOutItems();
 				break;
 			case PROCESS_SHIPMENT:
 				processShipment();
@@ -454,6 +450,143 @@ public class UserInterface {
 				break;
 			}
 		}
+	}
+
+	public static void test() {
+
+		GroceryStore gs = GroceryStore.getInstance();
+
+		String[] names = { "Jeff Bridges", "Mickey Rourke", "Chris Brown", "Johnny Depp", "Lady Gaga" };
+		String[] products = { "Milk", "Milk Duds", "Milk Choclate", "Milky Way", "Cinnamon", "heavy cream", "eel",
+				"raspberries", "peanuts", "bass", "swiss cheese", "quail eggs", "lima beans", "tomato puree",
+				"truffles", "parmesan cheese", "olives", "brown sugar", "pine nunts", "Bud light beer" };
+		int[] stock = { 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 105 };
+		int[] reorder = { 50, 100, 5, 40, 12, 33, 40, 80, 8, 5, 12, 150, 20, 22, 44, 19, 150, 250, 305, 100 };
+		double[] prices = { 4.50, 5, 6.99, 7.99, 8.50, 3.50, 3.99, 3.75, 19.99, 19.50, 14.99, 12.00, 40.0, 18.0, 0.99,
+				1.29, 1.50, 1.75, 1.80, 1.99 };
+		Random random = new Random();
+		//generate 5 members
+		for (int i = 0; i < 5; i++) {
+			Request request = new Request();
+			request.setMemberName(names[i]);
+			request.setAddress("123 Spooner Street");
+			request.setPhoneNumber(String.valueOf(random.nextInt(999999999)));
+			request.setFeePaid(100);
+			gs.enrollMember(request);
+		}
+
+		//generate 20 products
+		for (int i = 0; i < products.length; i++) {
+			Request request = new Request();
+			request.setProductName(products[i]);
+			request.setCurrentStock(stock[i]);
+			request.setReorderLevel(reorder[i]);
+			request.setPrice(prices[i]);
+			gs.addProduct(request);
+		}
+
+		//test process 1, enrollMember
+		Request request1 = new Request();
+		request1.setMemberName("Tom Cruise");
+		request1.setAddress("123 Yorkshire Ln");
+		request1.setPhoneNumber("1234567890");
+		request1.setFeePaid(100);
+
+		assert request1.getMemberName().equals("Tom Cruise");
+		assert request1.getAddress().equals("123 Yorkshire Ln");
+		assert request1.getPhoneNumber().equals("1234567890");
+		assert request1.getFeePaid() == 100;
+
+		Result result1 = gs.enrollMember(request1);
+
+		assert result1.getMemberID() == 6;
+		assert result1.getMemberName().equals("Tom Cruise");
+		assert result1.getResultCode() == Result.OPERATION_COMPLETED;
+		//test process 2, remove member
+		Request request2 = new Request();
+		request2.setMemberID(6);
+
+		Result result2 = gs.removeMember(request2);
+		assert result2.getResultCode() == Result.OPERATION_COMPLETED;
+		request2.setMemberID(-2);
+		result2 = gs.removeMember(request2);
+		assert result2.getResultCode() == Result.MEMBER_NOT_FOUND;
+
+		//test process 3, add product
+		Request request3 = new Request();
+		request3.setProductName("Spinach");
+		request3.setCurrentStock(50);
+		request3.setReorderLevel(100);
+		request3.setPrice(4.50);
+		Result result3 = gs.addProduct(request3);
+
+		assert request3.getProductName().equals("Spinach");
+		assert request3.getCurrentStock() == 50;
+		assert request3.getReorderLevel() == 100;
+		assert request3.getPrice() == 4.50;
+
+		assert result3.getResultCode() == Result.OPERATION_COMPLETED;
+		assert result3.getProductName().equals("Spinach");
+		assert result3.getReorderLevel() == 100;
+		assert result3.getCurrentStock() == 50;
+		assert result3.getProductID() == 21;
+		assert result3.getPrice() == 4.50;
+
+		request3.setProductName("Spinach");
+		result3 = gs.addProduct(request3);
+		assert result3.getResultCode() == Result.SAME_NAME_EXISTS;
+
+		//test process 4, checkout
+		Request request4 = new Request();
+		request4.setProductID(21);
+		request4.setQuantity(10);
+		assert request4.getProductID() == 21;
+		assert request4.getQuantity() == 10;
+
+		Result result4 = gs.checkOutItems(request4);
+
+		assert result4.getResultCode() == Result.OPERATION_COMPLETED;
+		assert result4.getProductID() == 21;
+		assert result4.getProductName() == "Spinach";
+
+		request4.setQuantity(500);
+		result4 = gs.checkOutItems(request4);
+		assert result4.getResultCode() == Result.QUANTITY_EXCEEDS_STOCK;
+
+		request4.setQuantity(1);
+		request4.setProductID(500);
+		result4 = gs.checkOutItems(request4);
+
+		assert result4.getResultCode() == Result.PRODUCT_NOT_FOUND;
+
+		//test process 5, process shipments
+		Request request5 = new Request();
+		request5.setOrderNumber(21);
+		assert request5.getOrderNumber() == 21;
+
+		Result result5 = gs.processShipment(request5);
+		assert result5.getResultCode() == Result.OPERATION_COMPLETED;
+		assert result5.getProductName().equals("Spinach");
+		assert result5.getReorderLevel() == 100;
+		assert result5.getCurrentStock() == 240;
+
+		request5.setOrderNumber(250);
+		result5 = gs.processShipment(request5);
+		assert result5.getResultCode() == Result.SHIPMENT_NOT_FOUND;
+
+		//test process 6, change price
+		Request request6 = new Request();
+		request6.setProductID(21);
+		request6.setPrice(8.00);
+
+		Result result6 = gs.changePrice(request6);
+		assert result6.getPrice() == 8.00;
+		assert result6.getResultCode() == Result.OPERATION_COMPLETED;
+
+		request6.setProductID(250);
+		result6 = gs.changePrice(request6);
+		assert result6.getResultCode() == Result.PRODUCT_NOT_FOUND;
+
 	}
 
 	public static void main(String[] args) {

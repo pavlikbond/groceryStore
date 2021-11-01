@@ -26,10 +26,11 @@ public class Transaction implements Serializable {
 	public void addProduct(Product product, int qunatity) {
 		productList.add(product);
 		quantityList.add(qunatity);
-		this.total = getTotalAmount();
+		this.total = calcTotalAmount();
 	}
 
-	private double getTotalAmount() {
+	//calculates total amount from all products
+	private double calcTotalAmount() {
 		double total = 0;
 
 		for (int i = 0; i < productList.size(); i++) {
@@ -67,6 +68,7 @@ public class Transaction implements Serializable {
 		this.total = total;
 	}
 
+	//creates a shipment for any item that needs to be ordered and returns it as a list
 	public ArrayList<Shipment> orderProducts() {
 		ArrayList<Shipment> shipments = new ArrayList<>();
 		for (int i = 0; i < productList.size(); i++) {
