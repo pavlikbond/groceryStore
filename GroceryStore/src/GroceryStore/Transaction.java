@@ -1,9 +1,13 @@
 package GroceryStore;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
-public class Transaction {
+public class Transaction implements Serializable {
 	private static int idCounter = 1;
 	private int transactionID;
 	private ArrayList<Product> productList;
@@ -22,9 +26,10 @@ public class Transaction {
 	public void addProduct(Product product, int qunatity) {
 		productList.add(product);
 		quantityList.add(qunatity);
+		this.total = getTotalAmount();
 	}
 
-	public double getTotalAmount() {
+	private double getTotalAmount() {
 		double total = 0;
 
 		for (int i = 0; i < productList.size(); i++) {
@@ -65,8 +70,9 @@ public class Transaction {
 	public ArrayList<Shipment> orderProducts() {
 		ArrayList<Shipment> shipments = new ArrayList<>();
 		for (int i = 0; i < productList.size(); i++) {
-			if (productList.get(i).getCurrentStock() - quantityList.get(i) < productList.get(i).getReorderLevel()) {
+			if (productList.get(i).getCurrentStock() < productList.get(i).getReorderLevel()) {
 				Shipment shipment = new Shipment(productList.get(i));
+				shipments.add(shipment);
 			}
 		}
 		return shipments;
@@ -79,8 +85,15 @@ public class Transaction {
 			string += productList.get(i).toString() + " quantity: " + quantityList.get(i) + "\n";
 
 		}
-		string += "\nTotal: " + total + "\nDate: " + date + "\n";
+		string += "\nTotal: $" + total + "\nDate: " + date + "\n";
 		return string;
 	}
 
+	public static void save(ObjectOutputStream output) throws IOException {
+		output.writeObject(idCounter);
+	}
+
+	public static void retrieve(ObjectInputStream input) throws IOException, ClassNotFoundException {
+		idCounter = (int) input.readObject();
+	}
 }

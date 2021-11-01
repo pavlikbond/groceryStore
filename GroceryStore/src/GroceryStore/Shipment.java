@@ -1,8 +1,12 @@
 package GroceryStore;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.time.LocalDate;
 
-public class Shipment {
+public class Shipment implements Serializable {
 
 	private static int orderCounter = 1;
 	private Product product;
@@ -52,4 +56,11 @@ public class Shipment {
 		return processed;
 	}
 
+	public static void save(ObjectOutputStream output) throws IOException {
+		output.writeObject(orderCounter);
+	}
+
+	public static void retrieve(ObjectInputStream input) throws IOException, ClassNotFoundException {
+		orderCounter = (int) input.readObject();
+	}
 }

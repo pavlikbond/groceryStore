@@ -1,10 +1,8 @@
 package UI;
 
 import java.io.BufferedReader;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.ObjectOutputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -40,7 +38,11 @@ public class UserInterface {
 	private static final int HELP = 14;
 
 	private UserInterface() {
-		groceryStore = GroceryStore.getInstance();
+		if (getNumberFromUser("Retreive data? Enter \"1\" for yes, any other number for no") == 1) {
+			retrieve();
+		} else {
+			groceryStore = GroceryStore.getInstance();
+		}
 	}
 
 	public static UserInterface instance() {
@@ -72,19 +74,6 @@ public class UserInterface {
 
 	// Here is step 13, it doesn't require we load so here is only save
 	// This should save data to the disk
-	public static boolean save() {
-		try {
-			FileOutputStream file = new FileOutputStream("LibraryData");
-			ObjectOutputStream output = new ObjectOutputStream(file);
-			output.writeObject(groceryStore);
-			Member.save(output);
-			file.close();
-			return true;
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
-			return false;
-		}
-	}
 
 	//Method to close scanners
 	public void close() {
@@ -92,17 +81,30 @@ public class UserInterface {
 	}
 
 	public int getNumberFromUser(String prompt) {
-		System.out.println(prompt);
-		String userInput = scanner.nextLine();
-		int toInt = Integer.parseInt(userInput); // This changes the String to an int
-		return toInt;
+		do {
+			try {
+				System.out.println(prompt);
+				String userInput = scanner.nextLine();
+				int toInt = Integer.parseInt(userInput); // This changes the String to an int
+				return toInt;
+			} catch (NumberFormatException e) {
+				System.out.println("Please, only enter digit(s)");
+			}
+		} while (true);
 	}
 
 	public double getPriceFromUser(String prompt) {
-		System.out.println(prompt);
-		String userInput = scanner.nextLine();
-		double toDouble = Double.parseDouble(userInput); // This changes the String to an int
-		return toDouble;
+		do {
+			try {
+				System.out.println(prompt);
+				String userInput = scanner.nextLine();
+				double toDouble = Double.parseDouble(userInput); // This changes the String to an int
+				return toDouble;
+			} catch (NumberFormatException e) {
+				System.out.println("Input has to be a number");
+			}
+		} while (true);
+
 	}
 
 	public String getInput(String prompt) {
@@ -169,6 +171,8 @@ public class UserInterface {
 		Result result = groceryStore.addProduct(request);
 		if (result.getResultCode() == Result.OPERATION_COMPLETED) {
 			System.out.println("Product added! Product ID is: " + result.getProductID());
+		} else if (result.getResultCode() == Result.SAME_NAME_EXISTS) {
+			System.out.println("Product name already exists, can't add duplicates");
 		} else {
 			System.out.println("Product could not be added");
 		}
@@ -192,6 +196,8 @@ public class UserInterface {
 			Result result = groceryStore.checkOutItems1(request);
 			if (result.getResultCode() == Result.PRODUCT_NOT_FOUND) {
 				System.out.println("Product not found");
+			} else if (result.getResultCode() == Result.QUANTITY_EXCEEDS_STOCK) {
+				System.out.println("Quantity exceeds current stock");
 			} else {
 				transaction.addProduct(result.getProduct(), request.getQuantity());
 				double itemsTotal = request.getQuantity() * result.getPrice();
@@ -200,8 +206,11 @@ public class UserInterface {
 			}
 		} while ((command = getNumberFromUser("Check out more items? Type 1 for \"yes\", any number for \"no\"")) == 1);
 		//print total
-		System.out.println("Total is: $" + transaction.getTotalAmount());
-		//take all itmes and order the ones that are needed
+		System.out.println("Total is: $" + transaction.getTotal());
+		request.setTransaction(transaction);
+		request.setMemberFields(member);
+		groceryStore.addTransaction(request);
+		//take all items and order the ones that are needed
 		ArrayList<Shipment> shipments = groceryStore.orderProducts(transaction);
 		for (Shipment shipment : shipments) {
 			System.out.println("Item reordered: " + shipment.getProduct().getName());
@@ -278,7 +287,8 @@ public class UserInterface {
 				System.out.println("Member name: " + member.getName());
 				System.out.println("Address: " + member.getAddress());
 				System.out.println("Member ID: " + member.getMemberID());
-				System.out.println("Fee paid: " + member.getFeePaid());
+				System.out.println("Fee paid: $" + member.getFeePaid());
+				System.out.println("Date joined: " + member.getDateJoined());
 				System.out.println();
 			}
 		}
@@ -321,26 +331,6 @@ public class UserInterface {
 		}
 
 	}
-
-	//LocalDate date1 = LocalDate.parse(userDate1, format);
-	//LocalDate date2 = LocalDate.parse(userDate2, format);
-
-	/*
-	if (!(date1.isBefore(date2) || date1.isEqual(date2))) {
-		System.out.println("Improper sequence of dates, first date is after the second date.");
-	} else {
-		ArrayList<Transaction> transactions = groceryStore.getTransactions(memberID, date1, date2);
-		if (transactions.isEmpty()) {
-			System.out.println("This member does not have any transactions");
-		} //I think we can get rid of this because if it is empty, it's empty
-		if (transactions == null) {
-			System.out.println("Member does not exist");
-		} else {
-			for (Transaction transaction : transactions) {
-				transaction.toString();
-			}
-		}
-	}*/
 
 	public void printOrders() {
 		ArrayList<Shipment> orders = groceryStore.getShipments();
@@ -391,6 +381,31 @@ public class UserInterface {
 		}
 	}
 
+	private void save() {
+		if (groceryStore.save()) {
+			System.out.println(" The grocery store has been successfully saved in the file GroceryStoreData \n");
+		} else {
+			System.out.println(" There has been an error in saving \n");
+		}
+	}
+
+	private void retrieve() {
+		try {
+			if (groceryStore == null) {
+				groceryStore = GroceryStore.retrieve();
+				if (groceryStore != null) {
+					System.out.println(
+							" The grocery store has been successfully retrieved from the file GroceryStoreData \n");
+				} else {
+					System.out.println("File doesnt exist; creating new Grocery Store");
+					groceryStore = GroceryStore.getInstance();
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 	public void process() {
 		int userInput;
 		help();
@@ -406,7 +421,7 @@ public class UserInterface {
 				addProduct();
 				break;
 			case CHECK_OUT:
-				checkOutItems();
+				checkOutItems1();
 				break;
 			case PROCESS_SHIPMENT:
 				processShipment();
@@ -443,48 +458,7 @@ public class UserInterface {
 	}
 
 	public static void main(String[] args) {
-
-		GroceryStore store = GroceryStore.getInstance();
 		UserInterface.instance().process();
-
-		/*
-		 * store.enrollMember("Pavel Bondarenko", "123 Main St. Chaska, MN 55318",
-		 * "952 123-4567", date, 100.00); System.out.println(store.removeMember(0));
-		 * System.out.println(store.removeMember(1));
-		 * 
-		 * // Testing addProduct, checkout store.addProduct("a", 20, 10.5, 5);
-		 * store.addProduct("b", 20, 10.02, 5); store.addProduct("c", 20, 10.11, 5);
-		 * store.addProduct("d", 20, 10.9, 5); store.addProduct("e", 20, 10, 5);
-		 * 
-		 * store.checkOutItems(0, date); System.out.println("Member: " +
-		 * store.getTransaction(0).getMemberID());
-		 * 
-		 * System.out.println("Product a stock: " +
-		 * store.getProduct(0).getCurrentStock());
-		 * System.out.println("Product b stock: " +
-		 * store.getProduct(1).getCurrentStock());
-		 * System.out.println("Product c stock: " +
-		 * store.getProduct(2).getCurrentStock());
-		 * System.out.println("Product d stock: " +
-		 * store.getProduct(3).getCurrentStock());
-		 * System.out.println("Product e stock: " +
-		 * store.getProduct(4).getCurrentStock());
-		 * 
-		 * System.out.println("Transaction Total: " +
-		 * store.getTransaction(0).getTotal());
-		 * 
-		 * // Testing for shipment System.out
-		 * .println(store.getShipment(0).getProduct().getName() + " " +
-		 * store.getShipment(0).getOrderedQuantity()); System.out
-		 * .println(store.getShipment(1).getProduct().getName() + " " +
-		 * store.getShipment(1).getOrderedQuantity());
-		 * 
-		 * store.getShipment(0).process();
-		 * 
-		 * System.out.println("Product a stock: " +
-		 * store.getProduct(0).getCurrentStock()); System.out.println("Processed: " +
-		 * store.getShipment(0).isProcessed());
-		 */
 
 	}
 

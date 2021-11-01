@@ -1,11 +1,13 @@
 package GroceryStore;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
-public class Member {
+public class Member implements Serializable {
 	private static int idCounter = 1;
 	private int memberID;
 	private String name;
@@ -54,6 +56,10 @@ public class Member {
 		output.writeObject(idCounter);
 	}
 
+	public static void retrieve(ObjectInputStream input) throws IOException, ClassNotFoundException {
+		idCounter = (int) input.readObject();
+	}
+
 	public boolean addTransaction(Transaction transaction) {
 		return transactionList.add(transaction);
 	}
@@ -78,10 +84,7 @@ public class Member {
 		return list;
 	}
 
-	//makes sure that compare date is in between date1 and date2 or equal to one of them
-	//Isaiah: Is this to compare the two dates together or?
-	//Pavel: This is to make sure that transaction date is between the dates the user requested, 
-	//since we're not pulling ALL transactions, only the ones in between the specified dates
+	//helper method makes sure that compare date is in between date1 and date2 or equal to one of them
 	private boolean validDate(LocalDate date1, LocalDate date2, LocalDate transactionDate) {
 		if ((transactionDate.isAfter(date1) || transactionDate.isEqual(date1))
 				&& (transactionDate.isBefore(date2) || transactionDate.isEqual(date2))) {

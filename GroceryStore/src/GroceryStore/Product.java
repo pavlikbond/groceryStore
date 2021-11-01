@@ -1,6 +1,11 @@
 package GroceryStore;
 
-public class Product {
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
+
+public class Product implements Serializable {
 	private static int idCounter = 1;
 	private String name;
 	private int productID;
@@ -48,7 +53,14 @@ public class Product {
 
 	@Override
 	public String toString() {
-		return "Product name: " + name + ", price: " + price;
+		return "Product name: " + name + ", price: $" + price;
 	}
 
+	public static void save(ObjectOutputStream output) throws IOException {
+		output.writeObject(idCounter);
+	}
+
+	public static void retrieve(ObjectInputStream input) throws IOException, ClassNotFoundException {
+		idCounter = (int) input.readObject();
+	}
 }

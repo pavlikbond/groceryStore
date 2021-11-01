@@ -8,6 +8,8 @@ public class Result extends DataTransfer {
 	public static final int OPERATION_COMPLETED = 3;
 	public static final int OPERATION_FAILED = 4;
 	public static final int SHIPMENT_NOT_FOUND = 5;
+	public static final int QUANTITY_EXCEEDS_STOCK = 6;
+	public static final int SAME_NAME_EXISTS = 7;
 
 	private int resultCode;
 	private Product product;

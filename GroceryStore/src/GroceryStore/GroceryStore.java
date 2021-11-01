@@ -1,5 +1,11 @@
 package GroceryStore;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -7,11 +13,11 @@ import java.util.Scanner;
 import DataTransfer.Request;
 import DataTransfer.Result;
 
-public class GroceryStore {
+public class GroceryStore implements Serializable {
 	private ArrayList<Member> memberList;
 	private ArrayList<Product> productList;
 	private ArrayList<Shipment> shipmentList;
-	Scanner reader = new Scanner(System.in);
+	transient Scanner reader = new Scanner(System.in);
 	// singleton design pattern
 	private static GroceryStore instance = null;
 
@@ -92,9 +98,18 @@ public class GroceryStore {
 	// value
 	public Result addProduct(Request request) {
 		Result result = new Result();
+		//make sure there are no products with same name
+		for (Product product : productList) {
+			if (product.getName().toLowerCase().equals(request.getProductName().toLowerCase())) {
+				result.setResultCode(Result.SAME_NAME_EXISTS);
+				return result;
+			}
+		}
 		Product product = new Product(request.getProductName(), request.getCurrentStock(), request.getPrice(),
 				request.getReorderLevel());
 		if (productList.add(product)) {
+			//automatically order 2x product
+			shipmentList.add(new Shipment(product));
 			result.setResultCode(Result.OPERATION_COMPLETED);
 			result.setProductFields(product);
 			return result;
@@ -109,11 +124,15 @@ public class GroceryStore {
 		Result result = new Result();
 		Transaction transaction = new Transaction(0, request.getDate());
 		Product product = getProduct(request.getProductID());
-		//member already verified, this is just to get the member object
-		Member member = verifyMember(request.getMemberID());
 		if (product != null) {
 			result.setProduct(product);
 			result.setProductFields(product);
+			//make sure quantity entered is not more than current stock
+			if (product.getCurrentStock() - request.getQuantity() < 0) {
+				result.setResultCode(Result.QUANTITY_EXCEEDS_STOCK);
+				return result;
+			}
+			product.setCurrentStock(product.getCurrentStock() - request.getQuantity());
 			result.setResultCode(Result.OPERATION_COMPLETED);
 			return result;
 		} else {
@@ -127,6 +146,11 @@ public class GroceryStore {
 		ArrayList<Shipment> shipments = transaction.orderProducts();
 		shipmentList.addAll(shipments);
 		return shipments;
+	}
+
+	public void addTransaction(Request request) {
+		Member member = verifyMember(request.getMemberID());
+		member.addTransaction(request.getTransaction());
 	}
 
 	// Checks out a member once they're done shopping. Creates a transaction with
@@ -275,5 +299,41 @@ public class GroceryStore {
 	public ArrayList<Product> getAllProducts() {
 		//this makes a copy and returns it without doing the for loop
 		return new ArrayList<>(productList);
+	}
+
+	public static boolean save() {
+		try {
+			FileOutputStream file = new FileOutputStream("GroceryStoreData");
+			ObjectOutputStream output = new ObjectOutputStream(file);
+			output.writeObject(instance);
+			Member.save(output);
+			Product.save(output);
+			Shipment.save(output);
+			Transaction.save(output);
+			file.close();
+			return true;
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+			return false;
+		}
+	}
+
+	public static GroceryStore retrieve() {
+		try {
+			FileInputStream file = new FileInputStream("GroceryStoreData");
+			ObjectInputStream input = new ObjectInputStream(file);
+			instance = (GroceryStore) input.readObject();
+			Member.retrieve(input);
+			Product.retrieve(input);
+			Shipment.retrieve(input);
+			Transaction.retrieve(input);
+			return instance;
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+			return null;
+		} catch (ClassNotFoundException cnfe) {
+			cnfe.printStackTrace();
+			return null;
+		}
 	}
 }
