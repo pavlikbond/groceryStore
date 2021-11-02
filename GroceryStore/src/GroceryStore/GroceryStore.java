@@ -120,6 +120,18 @@ public class GroceryStore implements Serializable {
 		}
 	}
 
+	//verifies that member exists
+	public Result verifyMember(Request request) {
+		Result result = new Result();
+		if (getMember(request.getMemberID()) != null) {
+			result.setResultCode(Result.OPERATION_COMPLETED);
+			return result;
+		} else {
+			result.setResultCode(Result.MEMBER_NOT_FOUND);
+			return result;
+		}
+	}
+
 	//checkout out items, fails if qty is greater than stock or product not found
 	public Result checkOutItems(Request request) {
 		Result result = new Result();
@@ -142,17 +154,13 @@ public class GroceryStore implements Serializable {
 		}
 	}
 
-	//returns list of shipments for checked out items if qty < reorderLevel
-	public ArrayList<Shipment> orderProducts(Transaction transaction) {
-		ArrayList<Shipment> shipments = transaction.orderProducts();
-		shipmentList.addAll(shipments);
-		return shipments;
-	}
-
-	//adds transaction to member after checkout
-	public void addTransaction(Request request) {
+	//adds transaction to member after checkout and returns list of ordered products
+	public ArrayList<Shipment> getShipments(Request request) {
 		Member member = getMember(request.getMemberID());
 		member.addTransaction(request.getTransaction());
+		ArrayList<Shipment> shipments = request.getTransaction().orderProducts();
+		shipmentList.addAll(shipments);
+		return shipments;
 	}
 
 	//uses id to look through list, if id matches, then the price is changed

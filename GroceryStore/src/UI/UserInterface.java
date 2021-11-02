@@ -59,6 +59,7 @@ public class UserInterface {
 		}
 	}
 
+	//prints the menu of options
 	public void help() {
 		System.out.println("Enter a number between 0 and 14 as explained below:");
 		System.out.println(EXIT + " to Exit\n");
@@ -78,14 +79,7 @@ public class UserInterface {
 		System.out.println(HELP + " for help");
 	}
 
-	// Here is step 13, it doesn't require we load so here is only save
-	// This should save data to the disk
-
-	//Method to close scanners
-	public void close() {
-		scanner.close();
-	}
-
+	//gets input from user and returns as string
 	public int getNumberFromUser(String prompt) {
 		do {
 			try {
@@ -99,6 +93,7 @@ public class UserInterface {
 		} while (true);
 	}
 
+	//gets input from user and returns as double
 	public double getPriceFromUser(String prompt) {
 		do {
 			try {
@@ -113,6 +108,7 @@ public class UserInterface {
 
 	}
 
+	//gets any input and returns as string
 	public String getInput(String prompt) {
 		do {
 			try {
@@ -126,6 +122,7 @@ public class UserInterface {
 
 	}
 
+	//gets input from user and returns it as LocalDate
 	public LocalDate getDate(String prompt) {
 		do {
 			try {
@@ -138,6 +135,7 @@ public class UserInterface {
 		} while (true);
 	}
 
+	//adds a member to the memberList
 	public void enrollMember() {
 		Request request = new Request();
 		request.setMemberName(getInput("Enter member name"));
@@ -152,6 +150,7 @@ public class UserInterface {
 		}
 	}
 
+	//method to remove member using member id
 	public void removeMember() {
 		Request request = new Request();
 		request.setMemberID(getNumberFromUser("Enter member ID: "));
@@ -166,6 +165,7 @@ public class UserInterface {
 		}
 	}
 
+	//add a new product to the list of products. Names can't be duplicated
 	public void addProduct() {
 		Request request = new Request();
 		request.setProductName(getInput("Enter product name :"));
@@ -182,13 +182,14 @@ public class UserInterface {
 		}
 	}
 
-	//I'm still working on this please don't delete -Pavel. It works except for the reordering which I need to troubleshoot
+	//Checkout. verifies member ID, then takes product id and quantity. generates transaction and passes
+	//it along to member to be stored. Then reorders and prints all items that need to be reordered
 	public void checkOutItems() {
 		int command;
 		Request request = new Request();
 		request.setMemberID(getNumberFromUser("Enter member ID"));
-		Member member = groceryStore.getMember(request.getMemberID());
-		if (member == null) {
+		Result result = groceryStore.verifyMember(request);
+		if (result.getResultCode() == Result.MEMBER_NOT_FOUND) {
 			System.out.println("Member ID not found in records");
 			return;
 		}
@@ -196,7 +197,7 @@ public class UserInterface {
 		do {
 			request.setProductID(getNumberFromUser("Enter product ID: "));
 			request.setQuantity(getNumberFromUser("Enter quantity: "));
-			Result result = groceryStore.checkOutItems(request);
+			result = groceryStore.checkOutItems(request);
 			if (result.getResultCode() == Result.PRODUCT_NOT_FOUND) {
 				System.out.println("Product not found");
 			} else if (result.getResultCode() == Result.QUANTITY_EXCEEDS_STOCK) {
@@ -211,10 +212,7 @@ public class UserInterface {
 		//print total
 		System.out.println("Total is: $" + transaction.getTotal());
 		request.setTransaction(transaction);
-		request.setMemberFields(member);
-		groceryStore.addTransaction(request);
-		//take all items and order the ones that are needed
-		ArrayList<Shipment> shipments = groceryStore.orderProducts(transaction);
+		ArrayList<Shipment> shipments = groceryStore.getShipments(request);
 		for (Shipment shipment : shipments) {
 			System.out.println("Item reordered: " + shipment.getProduct().getName());
 			System.out.println("Orered quantity: " + shipment.getOrderedQuantity());
@@ -222,6 +220,7 @@ public class UserInterface {
 		}
 	}
 
+	//process shipments. take shipment number and adds the ordered qty to stock of product
 	public void processShipment() {
 		Request request = new Request();
 		int command;
@@ -240,6 +239,7 @@ public class UserInterface {
 
 	}
 
+	//changes the price for a given product id, if product can be found
 	public void changePrice() {
 		Request request = new Request();
 		request.setProductID(getNumberFromUser("Enter product ID: "));
@@ -252,6 +252,7 @@ public class UserInterface {
 		}
 	}
 
+	//given a search input, looks for all products that begin with that input
 	public void getProductInfo() {
 		Request request = new Request();
 		request.setProductName(getInput("Enter the name of the product: "));
@@ -271,6 +272,7 @@ public class UserInterface {
 		}
 	}
 
+	//given a part of a name, searches for and prints all members that begin with that name
 	public void getMemberInfo() {
 		Request request = new Request();
 		request.setMemberName(getInput("Enter the name you're looking for: "));
@@ -327,6 +329,7 @@ public class UserInterface {
 
 	}
 
+	//prints all current orders (shipments) that are waiting to be processed
 	public void printOrders() {
 		ArrayList<Shipment> orders = groceryStore.getShipments();
 		if (!orders.isEmpty()) {
@@ -342,7 +345,7 @@ public class UserInterface {
 
 	}
 
-	//This returns all the members
+	//This returns all the members from the member list
 	//Step 11
 	public void getAllMembersInfo() {
 		ArrayList<Member> results = groceryStore.getAllMemberInfo();
@@ -376,6 +379,7 @@ public class UserInterface {
 		}
 	}
 
+	//saves the grocery store object and all the rest of the objects that it stores
 	private void save() {
 		if (groceryStore.save()) {
 			System.out.println(" The grocery store has been successfully saved in the file GroceryStoreData \n");
@@ -384,6 +388,7 @@ public class UserInterface {
 		}
 	}
 
+	//retrieves grocery store object if one is saved
 	private void retrieve() {
 		try {
 			if (groceryStore == null) {
@@ -401,6 +406,7 @@ public class UserInterface {
 		}
 	}
 
+	//the menu method to run all other methods
 	public void process() {
 		int userInput;
 		help();
@@ -452,6 +458,7 @@ public class UserInterface {
 		}
 	}
 
+	//test bed to test business processes 1-6
 	public static void test() {
 
 		GroceryStore gs = GroceryStore.getInstance();
